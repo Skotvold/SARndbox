@@ -818,9 +818,10 @@ Sandbox::Sandbox(int& argc,char**& argv)
 		}
 	
 
-        /* SARB - start the server in the server thread.*/
+        /* SARB - start the server in the server thread. and detach it*/
 
-        m_serverThread = std::thread(&ServerHandler::runServer, ServerHandler(),SARB_PORT);
+        this->m_serverThread = std::thread(&ServerHandler::runServer, ServerHandler(),SARB_PORT);
+        this->m_serverThread.detach();
 
 
 
@@ -1015,8 +1016,10 @@ Sandbox::Sandbox(int& argc,char**& argv)
 
 Sandbox::~Sandbox(void)
 	{
-        /* Stop the serverthread */
-        m_serverThread.join();
+
+        /* Stop the serverthread when sandbox stops */
+        this->m_serverThread.~thread();
+        std::cout << "Server thread stopped\n";
 
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();
