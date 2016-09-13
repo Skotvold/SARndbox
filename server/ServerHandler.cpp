@@ -9,8 +9,7 @@ ServerHandler::ServerHandler()
 
 void ServerHandler::runServer(int port)
 {
-    std::cout << "server thread started\n";
-    // Declare stram and acceptor
+	// Declare stram and acceptor
     bool running 			{true};
     tcp_stream* stream 		{nullptr};
     TCPAcceptor* acceptor 	{nullptr};
