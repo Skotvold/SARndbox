@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #define SANDBOX_INCLUDED
 
 #include <Threads/TripleBuffer.h>
+#include <thread>                       // C++ 11 thread for server thread - SARB
 #include <USB/Context.h>
 #include <Geometry/Box.h>
 #include <Geometry/ProjectiveTransformation.h>
@@ -41,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Kinect/FrameSource.h>
 
 #include "RainMaker.h"
+
+#include "server/ServerHandler.hpp" // include the serverHandler
 
 /* Forward declarations: */
 namespace Misc {
@@ -182,6 +185,10 @@ class Sandbox:public Vrui::Application,public GLObject
 	GLMotif::TextField* frameRateTextField;
 	GLMotif::TextFieldSlider* waterAttenuationSlider;
 	int controlPipeFd; // File descriptor of an optional named pipe to send control commands to a running AR Sandbox
+
+        // SARB - server variables
+        ServerHandler m_serverHandler;
+        std::thread m_serverThread;
 	
 	/* Private methods: */
 	void rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer); // Callback receiving raw depth frames from the Kinect camera; forwards them to the frame filter and rain maker objects

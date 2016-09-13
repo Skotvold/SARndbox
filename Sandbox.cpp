@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ***********************************************************************/
 
 #include "Sandbox.h"
-
+#include <thread>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
@@ -32,7 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <vector>
 #include <stdexcept>
 #include <iostream>
-#include <thread>
 #include <Misc/SelfDestructPointer.h>
 #include <Misc/FunctionCalls.h>
 #include <Misc/FileNameExtensions.h>
@@ -81,6 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Kinect/Camera.h>
 
 #define SAVEDEPTH 0
+#define SARB_PORT 9999
 
 #if SAVEDEPTH
 #include <Images/RGBImage.h>
@@ -815,6 +815,14 @@ Sandbox::Sandbox(int& argc,char**& argv)
 		std::cout<<"  -cp <control pipe name>"<<std::endl;
 		std::cout<<"     Sets the name of a named POSIX pipe from which to read control commands"<<std::endl;
 		}
+
+        /* Enable Server thread for SARB project
+           Port is pre-set at the moment to 9999
+        */
+        m_serverThread = std::thread(&ServerHandler::runServer,ServerHandler(),SARB_PORT);
+
+
+
 	
 	/* Enable background USB event handling: */
 	usbContext.startEventHandling();
@@ -1006,10 +1014,12 @@ Sandbox::Sandbox(int& argc,char**& argv)
 
 Sandbox::~Sandbox(void)
 	{
+        m_serverThread.join();
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();
 	delete camera;
 	delete frameFilter;
+
 	
 	/* Delete helper objects: */
 	delete surfaceRenderer;
