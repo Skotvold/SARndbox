@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string.h>
+#include <thread>
 #include "tcpAcceptor.hpp"
 
 
@@ -20,6 +21,17 @@ class ServerHandler
 {
 public:
 	ServerHandler();
-	void runServer(int port);
+    void startServer();
+    void stopServer();
+    void detachServer();
+    bool getThreadRunning();
+    ~ServerHandler();
+
 private:
+    bool m_threadRunning;
+    std::thread m_thread;
+    void runServer(int port);
+    tcp_stream* stream 	;
+    TCPAcceptor* acceptor;
+
 };

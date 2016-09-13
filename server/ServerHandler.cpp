@@ -1,9 +1,14 @@
 #include "ServerHandler.hpp"
 
 
+#define SARB_PORT 9999
+
 ServerHandler::ServerHandler()
+    : m_threadRunning(true),
+      stream(nullptr),
+      acceptor(nullptr)
 {
-	
+
 }
 
 
@@ -11,9 +16,7 @@ void ServerHandler::runServer(int port)
 {
     std::cout << "server thread started\n";
     // Declare stram and acceptor
-    bool running 			{true};
-    tcp_stream* stream 		{nullptr};
-    TCPAcceptor* acceptor 	{nullptr};
+
 	
 	acceptor = new TCPAcceptor(port);
 
@@ -21,10 +24,10 @@ void ServerHandler::runServer(int port)
     if (acceptor->start() == 0)
     {
 
-        while (running)
+        while (this->m_threadRunning)
         {
             stream = acceptor->accept();
-            if (stream != nullptr)
+            if (stream != nullptr && m_threadRunning)
             {
                 long len;
                 char line[256];
@@ -34,27 +37,36 @@ void ServerHandler::runServer(int port)
                     std::cout << "received bytes: " << len << std::endl;
                     line[len] = 0;
                     printf("received - %s\n", line);
-
                     std::string checkLine = line;
+
+
+
+
 
                     if(checkLine == "quitServer" || checkLine == "q")
                     {
-                       std::string sendSTR {"server shut down"};
-                       stream->send(sendSTR.c_str(), sendSTR.size());
-                       running = false;
-                       break;
+                        std::string sendSTR {"server shut down"};
+                        auto var = stream->send(sendSTR.c_str(), sendSTR.size());
+                        std::cout << "Sent bytes: " << var << std::endl;
+                        this->m_threadRunning = false;
                     }
 
-                    if(checkLine == "HeightMap")
-                    {
+                   else if(checkLine == "HeightMap")
+                   {
                         std::string sendSTR {"Heightmap_requested: here you go\n"};
-                        stream->send(sendSTR.c_str(),sendSTR.size());
-                    }
+                        auto var = stream->send(sendSTR.c_str(),sendSTR.size());
+                        std::cout << "Sent bytes: " << var << std::endl;
 
-                     auto var = stream->send(line, static_cast<size_t>(len));
-                     std::cout << "Sent bytes: " << var << std::endl;
+                   }
+
+                   else
+                   {
+                        auto var = stream->send(line, static_cast<size_t>(len));
+                        std::cout << "Sent bytes: " << var << std::endl;
+
+                   }
+
                 }
-
             }
         }
     }
@@ -67,9 +79,40 @@ void ServerHandler::runServer(int port)
         std::cerr << "Could not start the server. You could try another port"  << std::endl;
     }
 
+    this->~ServerHandler();
+
+}
 
 
-    // Delete the stream and accepto, if they exist.
+void ServerHandler::startServer()
+{
+    if(!m_threadRunning)
+    {
+        m_threadRunning = true;
+    }
+
+    this->m_thread = std::thread(&ServerHandler::runServer,this, SARB_PORT);
+
+}
+
+void ServerHandler::stopServer()
+{
+    m_threadRunning = false;
+}
+
+void ServerHandler::detachServer()
+{
+    m_thread.detach();
+}
+
+bool ServerHandler::getThreadRunning()
+{
+    return m_threadRunning;
+}
+
+ServerHandler::~ServerHandler()
+{
+    std::cout << "\ndestructor serverHandler()\n";
 
     if(stream)
     {
@@ -83,5 +126,10 @@ void ServerHandler::runServer(int port)
         acceptor = nullptr;
     }
 
-    std::cout << "server shutDown\n";
+    if(m_threadRunning)
+    {
+        m_threadRunning = false;
+    }
+
+    std::cout << "SERVERHANDLER Destructed\n";
 }

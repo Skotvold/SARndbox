@@ -81,7 +81,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Kinect/Camera.h>
 
 #define SAVEDEPTH 0
-#define SARB_PORT 9999
 
 #if SAVEDEPTH
 #include <Images/RGBImage.h>
@@ -820,8 +819,8 @@ Sandbox::Sandbox(int& argc,char**& argv)
 
         /* SARB - start the server in the server thread. and detach it*/
 
-        this->m_serverThread = std::thread(&ServerHandler::runServer, ServerHandler(),SARB_PORT);
-        this->m_serverThread.detach();
+        m_serverHandler.startServer();
+        m_serverHandler.detachServer();
 
 
 
@@ -1018,8 +1017,8 @@ Sandbox::~Sandbox(void)
 	{
 
         /* SARB - Stop the serverthread when sandbox stops */
-        this->m_serverThread.~thread();
-        std::cout << "Server thread stopped\n";
+        this->m_serverHandler.stopServer();
+        std::cout << "\nServer thread stopped\n";
 
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();
