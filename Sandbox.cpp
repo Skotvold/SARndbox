@@ -81,6 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Kinect/Camera.h>
 
 #define SAVEDEPTH 0
+#define SARB_PORT 9999
 
 #if SAVEDEPTH
 #include <Images/RGBImage.h>
@@ -816,6 +817,14 @@ Sandbox::Sandbox(int& argc,char**& argv)
 		std::cout<<"     Sets the name of a named POSIX pipe from which to read control commands"<<std::endl;
 		}
 	
+
+        /* SARB - start the server in the server thread.*/
+
+        m_serverThread = std::thread(&ServerHandler::runServer, ServerHandler(),SARB_PORT);
+
+
+
+
 	/* Enable background USB event handling: */
 	usbContext.startEventHandling();
 	
@@ -1006,6 +1015,9 @@ Sandbox::Sandbox(int& argc,char**& argv)
 
 Sandbox::~Sandbox(void)
 	{
+        /* Stop the serverthread */
+        m_serverThread.join();
+
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();
 	delete camera;
