@@ -20,7 +20,7 @@ public:
     ssize_t receive(char* buffer, size_t len);
 
     friend class TCPAcceptor;
-    friend class TCPConnector;
+   // friend class TCPConnector;
 
     std::string getIP();
     int getPort();

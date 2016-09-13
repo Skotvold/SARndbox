@@ -98,6 +98,11 @@ include $(VRUI_MAKEDIR)/BasicMakefile
 # Specify build rules for executables
 ########################################################################
 
+# Adding c++11 support
+CFLAGS = -Wall -c $(DEBUG) -std=c++11 -lpthread
+LFLAGS = -Wall $(DEBUG) -std=c++11 -lpthread
+CXXFLAGS = -Wall -c $(DEBUG) -std=c++11 -lpthread
+
 # Set location of configuration file directory:
 CFLAGS += -DCONFIGDIR='"$(ETCINSTALLDIR)"'
 
@@ -117,7 +122,14 @@ SARNDBOX_SOURCES = FrameFilter.cpp \
                    SurfaceRenderer.cpp \
                    WaterTable2.cpp \
                    RainMaker.cpp \
-                   Sandbox.cpp
+                   Sandbox.cpp \
+				   server/tcpAcceptor.cpp \
+				   server/tcp_stream.cpp \
+				   server/ServerHandler.cpp
+
+# Try to use this one in the future
+SERVER_SOURCES = server/tcpAcceptor.cpp \
+				 server/tcpStream.cpp
 
 # Set location of shader directory:
 $(OBJDIR)/SurfaceRenderer.o: CFLAGS += -DSHADERDIR='"$(SHAREINSTALLDIR)/Shaders"'

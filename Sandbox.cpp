@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <thread>
 #include <Misc/SelfDestructPointer.h>
 #include <Misc/FunctionCalls.h>
 #include <Misc/FileNameExtensions.h>
@@ -1341,6 +1342,7 @@ void Sandbox::display(GLContextData& contextData) const
 			
 			/* Reset OpenGL state: */
 			glPopAttrib();
+			printf("hello");
 			}
 		else
 			{
