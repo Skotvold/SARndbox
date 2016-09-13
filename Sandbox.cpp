@@ -1017,7 +1017,7 @@ Sandbox::Sandbox(int& argc,char**& argv)
 Sandbox::~Sandbox(void)
 	{
 
-        /* Stop the serverthread when sandbox stops */
+        /* SARB - Stop the serverthread when sandbox stops */
         this->m_serverThread.~thread();
         std::cout << "Server thread stopped\n";
 
