@@ -98,7 +98,7 @@ include $(VRUI_MAKEDIR)/BasicMakefile
 # Specify build rules for executables
 ########################################################################
 
-# Adding c++11 support
+# Adding c++11 support - SARB
 CFLAGS = -Wall -c $(DEBUG) -std=c++11 -lpthread
 LFLAGS = -Wall $(DEBUG) -std=c++11 -lpthread
 CXXFLAGS = -Wall -c $(DEBUG) -std=c++11 -lpthread
