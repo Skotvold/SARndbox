@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Threads/MutexCond.h>
 #include <Kinect/FrameBuffer.h>
 #include <Kinect/FrameSource.h>
+#include <iostream>
 
 /* Forward declarations: */
 namespace Misc {

@@ -205,6 +205,8 @@ void* FrameFilter::filterThreadMethod(void)
 		
 		/* Retain the new output frame: */
 		outputFrame=newOutputFrame;
+	
+
 		}
 	
 	return 0;

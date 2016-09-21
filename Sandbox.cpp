@@ -358,7 +358,13 @@ void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
 	{
 	/* Put the new frame into the frame input buffer: */
 	filteredFrames.postNewValue(frameBuffer);
-	
+		/*for(int i = 0; i<*frameBuffer.getSize(); i++)
+		{
+			
+			std::cout<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+        }*/
+
+
 	/* Wake up the foreground thread: */
 	Vrui::requestUpdate();
 	}
