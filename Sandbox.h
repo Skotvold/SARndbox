@@ -153,8 +153,8 @@ class Sandbox:public Vrui::Application,public GLObject
 	unsigned int frameSize[2]; // Width and height of the camera's depth frames
 	Kinect::FrameSource::IntrinsicParameters cameraIps; // Intrinsic parameters of the Kinect camera
 	FrameFilter* frameFilter; // Processing object to filter raw depth frames from the Kinect camera
-	bool pauseUpdates; // Pauses updates of the topography
-	Threads::TripleBuffer<Kinect::FrameBuffer> filteredFrames; // Triple buffer for incoming filtered depth frames
+    bool pauseUpdates; // Pauses updates of the topography
+    Threads::TripleBuffer<Kinect::FrameBuffer> filteredFrames; // Triple buffer for incoming filtered depth frames
 	PTransform projectorTransform; // The calibrated projector transformation matrix
 	GLMaterial surfaceMaterial; // Material properties to render the surface
 	GLColorMap heightMap; // The height color map
