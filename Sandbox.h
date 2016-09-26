@@ -185,8 +185,8 @@ class Sandbox:public Vrui::Application,public GLObject
 	GLMotif::TextFieldSlider* waterAttenuationSlider;
 	int controlPipeFd; // File descriptor of an optional named pipe to send control commands to a running AR Sandbox
 
-        /* SARB server Handler for the server */
-        ServerHandler m_serverHandler;
+    /* SARB server Handler for the server */
+    SARB::ServerHandler m_serverHandler;
 
 	/* Private methods: */
 	void rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer); // Callback receiving raw depth frames from the Kinect camera; forwards them to the frame filter and rain maker objects

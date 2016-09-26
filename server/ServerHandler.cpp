@@ -3,7 +3,7 @@
 
 #define SARB_PORT 9999
 
-ServerHandler::ServerHandler()
+SARB::ServerHandler::ServerHandler()
     : m_threadRunning(true),
       stream(nullptr),
       acceptor(nullptr)
@@ -12,7 +12,7 @@ ServerHandler::ServerHandler()
 }
 
 
-void ServerHandler::runServer(int port)
+void SARB::ServerHandler::runServer(int port)
 {
     std::cout << "server thread started\n";
     // Declare stram and acceptor
@@ -84,7 +84,7 @@ void ServerHandler::runServer(int port)
 }
 
 
-void ServerHandler::startServer()
+void SARB::ServerHandler::startServer()
 {
     if(!m_threadRunning)
     {
@@ -95,22 +95,22 @@ void ServerHandler::startServer()
 
 }
 
-void ServerHandler::stopServer()
+void SARB::ServerHandler::stopServer()
 {
     m_threadRunning = false;
 }
 
-void ServerHandler::detachServer()
+void SARB::ServerHandler::detachServer()
 {
     m_thread.detach();
 }
 
-bool ServerHandler::getThreadRunning()
+bool SARB::ServerHandler::getThreadRunning()
 {
     return m_threadRunning;
 }
 
-ServerHandler::~ServerHandler()
+SARB::ServerHandler::~ServerHandler()
 {
     std::cout << "\ndestructor serverHandler()\n";
 

@@ -16,22 +16,24 @@
 #include <thread>
 #include "tcpAcceptor.hpp"
 
+namespace SARB{
 
-class ServerHandler
-{
-public:
-	ServerHandler();
-    void startServer();
-    void stopServer();
-    void detachServer();
-    bool getThreadRunning();
-    ~ServerHandler();
+    class ServerHandler
+    {
+    public:
+        ServerHandler();
+        void startServer();
+        void stopServer();
+        void detachServer();
+        bool getThreadRunning();
+        ~ServerHandler();
 
-private:
-    bool m_threadRunning;
-    std::thread m_thread;
-    void runServer(int port);
-    tcp_stream* stream 	;
-    TCPAcceptor* acceptor;
+    private:
+        bool m_threadRunning;
+        std::thread m_thread;
+        void runServer(int port);
+        tcp_stream* stream 	;
+        TCPAcceptor* acceptor;
 
-};
+    };
+}
