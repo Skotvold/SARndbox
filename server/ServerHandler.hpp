@@ -21,7 +21,7 @@ namespace SARB{
     class ServerHandler
     {
     public:
-        ServerHandler();
+        ServerHandler(int port = 9999);
         void startServer();
         void stopServer();
         void detachServer();
@@ -29,11 +29,16 @@ namespace SARB{
         ~ServerHandler();
 
     private:
+
+        // Private member variables
         bool m_threadRunning;
-        std::thread m_thread;
-        void runServer(int port);
         tcp_stream* stream 	;
         TCPAcceptor* acceptor;
+        std::thread m_thread;
+        int m_port;
+
+        // Private member functions
+        void runServer();
 
     };
 }

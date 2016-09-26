@@ -599,8 +599,11 @@ Sandbox::Sandbox(int& argc,char**& argv)
 	 sun(0),
 	 mainMenu(0),pauseUpdatesToggle(0),waterControlDialog(0),
 	 waterSpeedSlider(0),waterMaxStepsSlider(0),frameRateTextField(0),waterAttenuationSlider(0),
-	 controlPipeFd(-1)
-	{
+     controlPipeFd(-1),
+     m_serverHandler(nullptr) // SARB
+
+
+{
 	/* Initialize the custom tool classes: */
 	WaterTool::initClass(*Vrui::getToolManager());
 	LocalWaterTool::initClass(*Vrui::getToolManager());
@@ -740,13 +743,24 @@ Sandbox::Sandbox(int& argc,char**& argv)
 				useHeightMap=true;
 			else if(strcasecmp(argv[i]+1,"rws")==0)
 				renderWaterSurface=true;
-			else if(strcasecmp(argv[i]+1,"cp")==0)
-				{
+			else if(strcasecmp(argv[i]+1,"cp")==0)	
+            {
 				++i;
 				controlPipeName=argv[i];
-				}
-			}
-		}
+
+            }
+
+
+
+            // SARB::Start Server command line argument
+            else if(strcasecmp(argv[i]+1,"server")==0)
+            {
+                ++i;
+                this->m_serverHandler( new SARB::ServerHandler( atoi(argv[i]) ));
+            }
+
+        }
+    }
 	
 	if(printHelp)
 		{
@@ -820,13 +834,25 @@ Sandbox::Sandbox(int& argc,char**& argv)
 		std::cout<<"     Renders water surface as geometric surface"<<std::endl;
 		std::cout<<"  -cp <control pipe name>"<<std::endl;
 		std::cout<<"     Sets the name of a named POSIX pipe from which to read control commands"<<std::endl;
-		}
+
+        // Print the command line argument.
+        // Same format used in sandbox.cpp
+        std::cout <<"  -server <port index>"<< std::endl;
+        std::cout <<"    Start the server with port index" << std::endl;
+        std::cout <<"    Default port 9999" << std::endl;
+    }
 	
 
         /* SARB - start the server in the server thread. and detach it*/
 
-        m_serverHandler.startServer();
-        m_serverHandler.detachServer();
+       if(m_serverHandler)
+       {
+           // Start the server in its own thread
+           this->m_serverHandler->startServer();
+
+           // Detach the server.
+           this->m_serverHandler->detachServer();
+       }
 
 
 
@@ -1020,11 +1046,14 @@ Sandbox::Sandbox(int& argc,char**& argv)
 	}
 
 Sandbox::~Sandbox(void)
-	{
+{
 
-        /* SARB - Stop the serverthread when sandbox stops */
-        this->m_serverHandler.stopServer();
+    /* SARB - Stop the serverthread when sandbox stops */
+    if(this->m_serverHandler)
+    {
+        this->m_serverHandler->stopServer();
         std::cout << "\nServer thread stopped\n";
+    }
 
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();

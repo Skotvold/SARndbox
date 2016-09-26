@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <Threads/TripleBuffer.h>
 #include <thread>           // SARB - c++11 Server thread.
+#include <memory>           // SARB - c++11 Unique ptr
 #include <USB/Context.h>
 #include <Geometry/Box.h>
 #include <Geometry/ProjectiveTransformation.h>
@@ -185,8 +186,6 @@ class Sandbox:public Vrui::Application,public GLObject
 	GLMotif::TextFieldSlider* waterAttenuationSlider;
 	int controlPipeFd; // File descriptor of an optional named pipe to send control commands to a running AR Sandbox
 
-    /* SARB server Handler for the server */
-    SARB::ServerHandler m_serverHandler;
 
 	/* Private methods: */
 	void rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer); // Callback receiving raw depth frames from the Kinect camera; forwards them to the frame filter and rain maker objects
@@ -214,6 +213,14 @@ class Sandbox:public Vrui::Application,public GLObject
 	
 	/* Methods from GLObject: */
 	virtual void initContext(GLContextData& contextData) const;
+
+
+
+    /* SARB - Server members */
+
+    /* SARB server Handler for the server */
+    std::unique_ptr<SARB::ServerHandler> m_serverHandler;
+
 	};
 
 #endif

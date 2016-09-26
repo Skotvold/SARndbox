@@ -1,24 +1,24 @@
 #include "ServerHandler.hpp"
 
 
-#define SARB_PORT 9999
 
-SARB::ServerHandler::ServerHandler()
+SARB::ServerHandler::ServerHandler(int port)
     : m_threadRunning(true),
       stream(nullptr),
-      acceptor(nullptr)
+      acceptor(nullptr),
+      m_port(port)
 {
 
 }
 
 
-void SARB::ServerHandler::runServer(int port)
+void SARB::ServerHandler::runServer()
 {
     std::cout << "server thread started\n";
     // Declare stram and acceptor
 
 	
-	acceptor = new TCPAcceptor(port);
+    acceptor = new TCPAcceptor(this->m_port);
 
 	// if the server found a valid port
     if (acceptor->start() == 0)
@@ -91,7 +91,7 @@ void SARB::ServerHandler::startServer()
         m_threadRunning = true;
     }
 
-    this->m_thread = std::thread(&ServerHandler::runServer,this, SARB_PORT);
+    this->m_thread = std::thread(&ServerHandler::runServer,this);
 
 }
 
@@ -109,6 +109,7 @@ bool SARB::ServerHandler::getThreadRunning()
 {
     return m_threadRunning;
 }
+
 
 SARB::ServerHandler::~ServerHandler()
 {
@@ -133,3 +134,5 @@ SARB::ServerHandler::~ServerHandler()
 
     std::cout << "SERVERHANDLER Destructed\n";
 }
+
+
