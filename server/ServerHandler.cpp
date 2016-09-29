@@ -37,7 +37,7 @@ void ServerHandler::runServer(int port)
                     std::cout << "received bytes: " << len << std::endl;
                     line[len] = 0;
                     printf("received - %s\n", line);
-                    std::string checkLine = line;
+                    std::string checkLine = line; 
 
 
 
