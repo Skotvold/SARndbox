@@ -346,7 +346,7 @@ Sandbox::DataItem::~DataItem(void)
 Methods of class Sandbox:
 ************************/
 
-void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
+    void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
 	{
 	/* Pass the received frame to the frame filter and the rain maker's frame filter: */
 	if(frameFilter!=0&&!pauseUpdates)
@@ -355,33 +355,36 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
 		rmFrameFilter->receiveRawFrame(frameBuffer);
 	}
 
-void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
+    void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
 	{
-	/* Put the new frame into the frame input buffer: */
-	filteredFrames.postNewValue(frameBuffer);
-    out.open("heightmapData");
-        for(int i = 0; i<*frameBuffer.getSize(); i++)
-		{
-			
-            out<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+        /* Put the new frame into the frame input buffer: */
+        filteredFrames.postNewValue(frameBuffer);
+
+        if(this->m_printFileSARB)
+        {
+            this->m_outFileSARB.open("heightmapData");
+
+            for(int i = 0; i<*frameBuffer.getSize(); i++)
+            {
+               this->m_outFileSARB<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+            }
         }
 
-
-	/* Wake up the foreground thread: */
-	Vrui::requestUpdate();
+        /* Wake up the foreground thread: */
+        Vrui::requestUpdate();
 	}
 
 void Sandbox::receiveRainObjects(const RainMaker::BlobList& newRainObjects)
-	{
+{
 	/* Put the new object list into the object list buffer: */
 	rainObjects.postNewValue(newRainObjects);
 	
 	/* Don't wake up the foreground thread; do it when a new filtered frame arrives: */
 	// Vrui::requestUpdate();
-	}
+}
 
 void Sandbox::addWater(GLContextData& contextData) const
-	{
+{
 	/* Check if the most recent rain object list is not empty: */
 	if(!rainObjects.getLockedValue().empty())
 		{
@@ -602,7 +605,8 @@ Sandbox::Sandbox(int& argc,char**& argv)
 	 mainMenu(0),pauseUpdatesToggle(0),waterControlDialog(0),
 	 waterSpeedSlider(0),waterMaxStepsSlider(0),frameRateTextField(0),waterAttenuationSlider(0),
      controlPipeFd(-1),
-     m_serverHandler(nullptr) // SARB
+     m_serverHandler(nullptr), // SARB
+     m_printFileSARB(false)    // SARB
 
 
 {
@@ -763,6 +767,17 @@ Sandbox::Sandbox(int& argc,char**& argv)
                 ++i;
                 this->m_serverHandler.reset(new SARB::ServerHandler(atoi(argv[i])));
             }
+
+            else if(strcasecmp(argv[i]+1,"sarbfile")==0)
+
+            {
+                // Start the server. Simple way to do it in c++11 where we do
+                // not have std::make_unique. We assigned the serverHandler to nullptr
+                // as a initializer list.
+                 this->m_printFileSARB = true;
+            }
+
+
 
         }
     }
@@ -1060,9 +1075,9 @@ Sandbox::~Sandbox(void)
         std::cout << "\nServer thread stopped\n";
     }
 
-    if(out)
+    if(this->m_outFileSARB)
     {
-        out.close();
+        this->m_outFileSARB.close();
     }
 
 	/* Stop streaming depth frames: */

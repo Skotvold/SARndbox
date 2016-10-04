@@ -221,7 +221,8 @@ class Sandbox:public Vrui::Application,public GLObject
 
     /* SARB server Handler for the server */
     std::unique_ptr<SARB::ServerHandler> m_serverHandler;
-    std::ofstream out;
+    std::ofstream m_outFileSARB;
+    bool m_printFileSARB;
 
 
 	};
