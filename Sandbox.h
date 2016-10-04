@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "RainMaker.h"
 #include "server/ServerHandler.hpp" // handle our server
+#include  <fstream>
 
 /* Forward declarations: */
 namespace Misc {
@@ -220,6 +221,8 @@ class Sandbox:public Vrui::Application,public GLObject
 
     /* SARB server Handler for the server */
     std::unique_ptr<SARB::ServerHandler> m_serverHandler;
+    std::ofstream out;
+
 
 	};
 

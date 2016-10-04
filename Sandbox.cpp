@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <Misc/SelfDestructPointer.h>
 #include <Misc/FunctionCalls.h>
@@ -358,11 +359,12 @@ void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
 	{
 	/* Put the new frame into the frame input buffer: */
 	filteredFrames.postNewValue(frameBuffer);
-		/*for(int i = 0; i<*frameBuffer.getSize(); i++)
+    out.open("heightmapData");
+        for(int i = 0; i<*frameBuffer.getSize(); i++)
 		{
 			
-			std::cout<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
-        }*/
+            out<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+        }
 
 
 	/* Wake up the foreground thread: */
@@ -1056,6 +1058,11 @@ Sandbox::~Sandbox(void)
     {
         this->m_serverHandler->stopServer();
         std::cout << "\nServer thread stopped\n";
+    }
+
+    if(out)
+    {
+        out.close();
     }
 
 	/* Stop streaming depth frames: */
