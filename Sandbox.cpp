@@ -755,8 +755,11 @@ Sandbox::Sandbox(int& argc,char**& argv)
             // SARB::Start Server command line argument
             else if(strcasecmp(argv[i]+1,"server")==0)
             {
+                // Start the server. Simple way to do it in c++11 where we do
+                // not have std::make_unique. We assigned the serverHandler to nullptr
+                // as a initializer list.
                 ++i;
-                this->m_serverHandler( new SARB::ServerHandler( atoi(argv[i]) ));
+                this->m_serverHandler.reset(new SARB::ServerHandler(atoi(argv[i])));
             }
 
         }
