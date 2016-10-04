@@ -65,7 +65,7 @@ void ServerHandler::runServer(int port)
 					else{
 						//TODO put pckt NACK
 						Packet sendPckt = new Packet(CMD_ACK,0x01,DATA_WRONG_CRC);
-						auto var = stream->send(sendPckt.getPacket(), sendPckt.getSize());
+						auto var = stream->send(sendPckt.getPacket(), sendPckt.getSize()+3);
 						std::cout << "Packet sent : " << sendPckt;
 					}					
                 }
