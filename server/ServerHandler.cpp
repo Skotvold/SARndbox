@@ -32,40 +32,42 @@ void ServerHandler::runServer(int port)
                 long len;
                 char line[256];
 
-                while ( (len = stream->receive(line, sizeof(line))) > 0)
+                while ( (stream->receive(line, sizeof(line))) > 0)
                 {
-                    std::cout << "received bytes: " << len << std::endl;
-                    line[len] = 0;
-                    printf("received - %s\n", line);
-                    std::string checkLine = line; 
+                    //std::cout << "received bytes: " << len << std::endl;
+                    //line[len] = 0;
+					Packet receivedPckt = new Packet(line);
+					if(pckt.checkCrc()){
+						std::cout << "Packet received : " << receivedPckt;
+						/*if(checkLine == "quitServer" || checkLine == "q")
+						{
+							std::string sendSTR {"server shut down"};
+							auto var = stream->send(sendSTR.c_str(), sendSTR.size());
+							std::cout << "Sent bytes: " << var << std::endl;
+							this->m_threadRunning = false;
+						}
 
+					   else if(checkLine == "HeightMap")
+					   {
+							std::string sendSTR {"Heightmap_requested: here you go\n"};
+							auto var = stream->send(sendSTR.c_str(),sendSTR.size());
+							std::cout << "Sent bytes: " << var << std::endl;
 
+					   }
 
+					   else
+					   {
+							auto var = stream->send(line, static_cast<size_t>(len));
+							std::cout << "Sent bytes: " << var << std::endl;
 
-
-                    if(checkLine == "quitServer" || checkLine == "q")
-                    {
-                        std::string sendSTR {"server shut down"};
-                        auto var = stream->send(sendSTR.c_str(), sendSTR.size());
-                        std::cout << "Sent bytes: " << var << std::endl;
-                        this->m_threadRunning = false;
-                    }
-
-                   else if(checkLine == "HeightMap")
-                   {
-                        std::string sendSTR {"Heightmap_requested: here you go\n"};
-                        auto var = stream->send(sendSTR.c_str(),sendSTR.size());
-                        std::cout << "Sent bytes: " << var << std::endl;
-
-                   }
-
-                   else
-                   {
-                        auto var = stream->send(line, static_cast<size_t>(len));
-                        std::cout << "Sent bytes: " << var << std::endl;
-
-                   }
-
+					   }*/
+					}
+					else{
+						//TODO put pckt NACK
+						Packet sendPckt = new Packet(CMD_ACK,0x01,DATA_WRONG_CRC);
+						auto var = stream->send(sendPckt.getPacket(), sendPckt.getSize());
+						std::cout << "Packet sent : " << sendPckt;
+					}					
                 }
             }
         }

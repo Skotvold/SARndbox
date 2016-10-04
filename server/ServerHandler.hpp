@@ -15,6 +15,8 @@
 #include <string.h>
 #include <thread>
 #include "tcpAcceptor.hpp"
+#include "packet.h"
+#include "cmd.h"
 
 
 class ServerHandler
