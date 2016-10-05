@@ -360,6 +360,8 @@ Methods of class Sandbox:
         /* Put the new frame into the frame input buffer: */
         filteredFrames.postNewValue(frameBuffer);
 
+        std::cout<<filteredFrames.getSize()<<"\n";
+
         if(this->m_printFileSARB)
         {
             this->m_outFileSARB.open("heightmapData");
