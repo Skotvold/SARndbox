@@ -8,18 +8,18 @@
 #include "packet.h"
 
 //Constructors
-void Packet::Packet(){
+Packet::Packet(){
 	this.cmd = 0xFF;		
 }
 	
-void Packet::Packet(BYTE cmd, BYTE size, BYTE* data){
+Packet::Packet(BYTE cmd, BYTE size, BYTE* data){
 	this.cmd = cmd;
 	this.size = size;
 	this.data = data;
 	this.crc = calcCrc();
 }
 
-void Packet::Packet(char* buffer){
+Packet::Packet(char* buffer){
 	int i;
 	cmd = buffer[0];
 	size = buffer[1];

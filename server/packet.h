@@ -21,11 +21,12 @@ private:
 	BYTE crc;
 
 public:
-    ~Packet();
-    
-	void Packet();
-	void Packet(BYTE cmd, BYTE size, BYTE* data);
-    void Packet(char *buffer);	
+
+
+     Packet();
+     Packet(BYTE cmd, BYTE size, BYTE* data);
+     Packet(char *buffer);
+     ~Packet();
 	
 	BYTE getCmd();
 	BYTE getSize();

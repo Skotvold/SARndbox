@@ -36,36 +36,16 @@ void ServerHandler::runServer(int port)
                 {
                     //std::cout << "received bytes: " << len << std::endl;
                     //line[len] = 0;
-					Packet receivedPckt = new Packet(line);
-					if(pckt.checkCrc()){
+                    auto receivedPckt(line);
+                    if(receivedPckt.checkCrc())
+                    {
 						std::cout << "Packet received : " << receivedPckt;
-						/*if(checkLine == "quitServer" || checkLine == "q")
-						{
-							std::string sendSTR {"server shut down"};
-							auto var = stream->send(sendSTR.c_str(), sendSTR.size());
-							std::cout << "Sent bytes: " << var << std::endl;
-							this->m_threadRunning = false;
-						}
 
-					   else if(checkLine == "HeightMap")
-					   {
-							std::string sendSTR {"Heightmap_requested: here you go\n"};
-							auto var = stream->send(sendSTR.c_str(),sendSTR.size());
-							std::cout << "Sent bytes: " << var << std::endl;
-
-					   }
-
-					   else
-					   {
-							auto var = stream->send(line, static_cast<size_t>(len));
-							std::cout << "Sent bytes: " << var << std::endl;
-
-					   }*/
 					}
 					else{
 						//TODO put pckt NACK
-						Packet sendPckt = new Packet(CMD_ACK,0x01,DATA_WRONG_CRC);
-						auto var = stream->send(sendPckt.getPacket(), sendPckt.getSize()+3);
+                        auto sendPckt(CMD_ACK,0x01,DATA_WRONG_CRC);
+                        auto var = stream->send(sendPckt.getPacket(), (int)sendPckt.getSize()+3);
 						std::cout << "Packet sent : " << sendPckt;
 					}					
                 }
