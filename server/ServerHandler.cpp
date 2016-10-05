@@ -39,28 +39,7 @@ void ServerHandler::runServer(int port)
 					Packet receivedPckt(line);
 					if(receivedPckt.checkCrc()){
 						std::cout << "Packet received : " << receivedPckt;
-						/*if(checkLine == "quitServer" || checkLine == "q")
-						{
-							std::string sendSTR {"server shut down"};
-							auto var = stream->send(sendSTR.c_str(), sendSTR.size());
-							std::cout << "Sent bytes: " << var << std::endl;
-							this->m_threadRunning = false;
-						}
 
-					   else if(checkLine == "HeightMap")
-					   {
-							std::string sendSTR {"Heightmap_requested: here you go\n"};
-							auto var = stream->send(sendSTR.c_str(),sendSTR.size());
-							std::cout << "Sent bytes: " << var << std::endl;
-
-					   }
-
-					   else
-					   {
-							auto var = stream->send(line, static_cast<size_t>(len));
-							std::cout << "Sent bytes: " << var << std::endl;
-
-					   }*/
 					}
 					else{
 						//TODO put pckt NACK

@@ -21,12 +21,22 @@ private:
 	BYTE crc;
 
 public:
+<<<<<<< HEAD
     
 	Packet();
 	Packet(BYTE cmd, BYTE size, BYTE* data);
 	Packet(char *buffer);	
 	~Packet();
 
+=======
+
+
+     Packet();
+     Packet(BYTE cmd, BYTE size, BYTE* data);
+     Packet(char *buffer);
+     ~Packet();
+	
+>>>>>>> eb9d60e2526876ab61ddd9e9d26363b9ae767e2d
 	BYTE getCmd();
 	BYTE getSize();
 	BYTE* getData();
