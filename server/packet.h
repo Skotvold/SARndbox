@@ -15,18 +15,18 @@ typedef unsigned char BYTE;
 class Packet {
 
 private:
-    BYTE cmd;
-    BYTE size;
-    BYTE* data;
+	BYTE cmd;
+	BYTE size;
+	BYTE* data;
 	BYTE crc;
 
 public:
-    ~Packet();
     
-	void Packet();
-	void Packet(BYTE cmd, BYTE size, BYTE* data);
-    void Packet(char *buffer);	
-	
+	Packet();
+	Packet(BYTE cmd, BYTE size, BYTE* data);
+	Packet(char *buffer);	
+	~Packet();
+
 	BYTE getCmd();
 	BYTE getSize();
 	BYTE* getData();
@@ -35,7 +35,7 @@ public:
 	BYTE setSize(BYTE size);
 	BYTE* setData(BYTE* data);
 	BYTE setCrc(BYTE crc);
-	
+
 	BYTE calcCrc();
 	bool checkCrc();
 	char* getPacket();

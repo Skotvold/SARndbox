@@ -36,8 +36,8 @@ void ServerHandler::runServer(int port)
                 {
                     //std::cout << "received bytes: " << len << std::endl;
                     //line[len] = 0;
-					Packet receivedPckt = new Packet(line);
-					if(pckt.checkCrc()){
+					Packet receivedPckt(line);
+					if(receivedPckt.checkCrc()){
 						std::cout << "Packet received : " << receivedPckt;
 						/*if(checkLine == "quitServer" || checkLine == "q")
 						{
@@ -64,8 +64,8 @@ void ServerHandler::runServer(int port)
 					}
 					else{
 						//TODO put pckt NACK
-						Packet sendPckt = new Packet(CMD_ACK,0x01,DATA_WRONG_CRC);
-						auto var = stream->send(sendPckt.getPacket(), sendPckt.getSize()+3);
+						Packet sendPckt(CMD_ACK,0x01,DATA_WRONG_CRC);
+						auto var = stream->send(sendPckt.getPacket(), (int)sendPckt.getSize()+3);
 						std::cout << "Packet sent : " << sendPckt;
 					}					
                 }
