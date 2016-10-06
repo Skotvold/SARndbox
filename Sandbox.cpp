@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <typeinfo>
 #include <Misc/SelfDestructPointer.h>
 #include <Misc/FunctionCalls.h>
 #include <Misc/FileNameExtensions.h>
@@ -360,15 +361,14 @@ Methods of class Sandbox:
         /* Put the new frame into the frame input buffer: */
         filteredFrames.postNewValue(frameBuffer);
 
-        std::cout<<filteredFrames.getSize()<<"\n";
 
         if(this->m_printFileSARB)
         {
             this->m_outFileSARB.open("heightmapData");
 
-            for(int i = 0; i<*frameBuffer.getSize(); i++)
+            for(int i = 0; i<*frameBuffer.getSize()*480; i++)
             {
-               this->m_outFileSARB<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+               this->m_outFileSARB<< reinterpret_cast<const int*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
             }
         }
 
@@ -1102,13 +1102,14 @@ Sandbox::~Sandbox(void)
 	}
 
 void Sandbox::frame(void)
-	{
+{
 	/* Check if the filtered frame has been updated: */
 	if(filteredFrames.lockNewValue())
-		{
+    {
 		/* Update the surface renderer's depth image: */
 		surfaceRenderer->setDepthImage(filteredFrames.getLockedValue());
-		}
+
+    }
 	
 	/* Lock the most recent rain object list: */
 	rainObjects.lockNewValue();
