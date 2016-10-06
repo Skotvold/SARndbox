@@ -8,39 +8,33 @@
 
 #include <stdlib.h>
 #include <string>
+#include <cstring>
 #include <iostream>
 
 typedef unsigned char BYTE;
 
+enum PACKET_SIZE {BYTES_MAX = 21000,BYTES_16384 = 16384,BYTES_8192 = 8192, BYTES_1024 = 1024};
+
 class Packet {
 
 private:
-    BYTE cmd;
-    BYTE size;
-    BYTE* data;
-	BYTE crc;
+    int size;
+    int pcktSize;
+    char* data;
 
 public:
 
-
      Packet();
-     Packet(BYTE cmd, BYTE size, BYTE* data);
-     Packet(char *buffer);
+     Packet(int size, char* data);
      ~Packet();
 	
-	BYTE getCmd();
-	BYTE getSize();
-	BYTE* getData();
-	BYTE getCrc();
-	BYTE setCmd(BYTE cmd);
-	BYTE setSize(BYTE size);
-	BYTE* setData(BYTE* data);
-	BYTE setCrc(BYTE crc);
-	
-	BYTE calcCrc();
-	bool checkCrc();
-	char* getPacket();
-	void toString();
-	
+        int getSize() const;
+        char* getData();
+        void setSize(int size);
+        int getPcktSize() const;
+        void setPcktSize(int size);
+        void setData(char* data);
+        void addData(char* data, int size);
+
 };
-std::ostream & operator<<(std::ostream & Str, Packet const & packet);
+

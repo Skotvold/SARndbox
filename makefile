@@ -125,7 +125,8 @@ SARNDBOX_SOURCES = FrameFilter.cpp \
                    Sandbox.cpp \
 				   server/tcpAcceptor.cpp \
 				   server/tcp_stream.cpp \
-				   server/ServerHandler.cpp
+				   server/ServerHandler.cpp \
+				   server/packet.cpp
 
 # Try to use this one in the future
 SERVER_SOURCES = server/tcpAcceptor.cpp \
