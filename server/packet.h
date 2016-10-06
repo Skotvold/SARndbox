@@ -27,7 +27,7 @@ public:
      Packet();
      Packet(int size, char* data);
      ~Packet();
-	
+
         int getSize() const;
         char* getData();
         void setSize(int size);
@@ -35,6 +35,5 @@ public:
         void setPcktSize(int size);
         void setData(char* data);
         void addData(char* data, int size);
-
 };
 
