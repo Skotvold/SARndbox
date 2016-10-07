@@ -360,15 +360,15 @@ Methods of class Sandbox:
 	{
         /* Put the new frame into the frame input buffer: */
         filteredFrames.postNewValue(frameBuffer);
-
+	
 
         if(this->m_printFileSARB)
         {
-            this->m_outFileSARB.open("heightmapData");
+            this->m_outFileSARB.open("heightmapData.txt");
 
             for(int i = 0; i<*frameBuffer.getSize()*480; i++)
             {
-               this->m_outFileSARB<< reinterpret_cast<const int*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+               std::cout << reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
             }
         }
 
@@ -777,6 +777,7 @@ Sandbox::Sandbox(int& argc,char**& argv)
                 // not have std::make_unique. We assigned the serverHandler to nullptr
                 // as a initializer list.
                  this->m_printFileSARB = true;
+                 this->m_outFileSARB = std::ofstream("heightmapData.txt");
             }
 
 
