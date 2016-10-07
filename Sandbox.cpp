@@ -360,16 +360,18 @@ Methods of class Sandbox:
 	{
         /* Put the new frame into the frame input buffer: */
         filteredFrames.postNewValue(frameBuffer);
-	
+		
 
-        if(this->m_printFileSARB)
+        if(this->m_printFileSARB )
         {
-            this->m_outFileSARB.open("heightmapData.txt");
-
+            this->m_outFileSARB.open("heightmapData");
+			this->m_outFileSARB << "frame:"  <<step <<std::endl;
             for(int i = 0; i<*frameBuffer.getSize()*480; i++)
             {
-               std::cout << reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+               this->m_outFileSARB << reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
             }
+            
+       
         }
 
         /* Wake up the foreground thread: */
@@ -776,8 +778,7 @@ Sandbox::Sandbox(int& argc,char**& argv)
                 // Start the server. Simple way to do it in c++11 where we do
                 // not have std::make_unique. We assigned the serverHandler to nullptr
                 // as a initializer list.
-                 this->m_printFileSARB = true;
-                 this->m_outFileSARB = std::ofstream("heightmapData.txt");
+                 this->m_printFileSARB = false;
             }
 
 
@@ -1076,11 +1077,6 @@ Sandbox::~Sandbox(void)
     {
         this->m_serverHandler->stopServer();
         std::cout << "\nServer thread stopped\n";
-    }
-
-    if(this->m_outFileSARB)
-    {
-        this->m_outFileSARB.close();
     }
 
 	/* Stop streaming depth frames: */
@@ -1430,7 +1426,7 @@ void Sandbox::display(GLContextData& contextData) const
 		}
 	else
 		{
-		/* Render the surface with height map: */
+		/* Render the surface with height map: this place sarb*/
 		surfaceRenderer->glRenderSinglePass(dataItem->heightColorMapObject,contextData);
 		}
 	
