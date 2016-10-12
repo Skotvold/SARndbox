@@ -43,8 +43,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <Kinect/FrameSource.h>
 
 #include "RainMaker.h"
-#include "server/ServerHandler.hpp" // handle our server
 #include  <fstream>
+
+//SARB
+#include "server/ServerHandler.hpp" // handle our server
+#include <vector>
 
 /* Forward declarations: */
 namespace Misc {

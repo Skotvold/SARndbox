@@ -40,7 +40,10 @@ void SARB::ServerHandler::runServer()
                     std::string checkLine = line;
 
 
-
+					if(checkLine == "file")
+					{
+						m_storeString = checkLine;
+					}
 
 
                     if(checkLine == "quitServer" || checkLine == "q")

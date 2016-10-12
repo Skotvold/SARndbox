@@ -362,14 +362,33 @@ Methods of class Sandbox:
         filteredFrames.postNewValue(frameBuffer);
 		
 
+		Kinect::FrameBuffer tempFrameBuffer;
+	    tempFrameBuffer = surfaceRenderer->getHeightMap();
+	    std::vector<float> iAmAwesome;
+       for(int i = 0; i < 639; i++)
+       {
+       		for(int j = 0; j < 480; j++)
+       			{
+       				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i+1)*j]);
+       			}
+       }
+       	if (m_serverHandler->getString() == "file")
+       	{
+       		this->m_outFileSARB.open("heightmapData");
+       		this->m_outFileSARB.clear();
+            for(int i = 0; i < 639; i++)
+            {
+            	for(int j = 0; j < 480; j++)
+            	{
+               		this->m_outFileSARB << iAmAwesome[(i+1)*j] << " ";
+            	}
+            	this->m_outFileSARB << "\n";
+            }
+            this->m_outFileSARB.close();
+       	}
         /*if(this->m_printFileSARB )
         {
-            this->m_outFileSARB.open("heightmapData");
-			this->m_outFileSARB << "frame:"  <<step <<std::endl;
-            for(int i = 0; i<*frameBuffer.getSize()*480; i++)
-            {
-               this->m_outFileSARB << reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
-            }
+            
             
        
         }*/
@@ -869,7 +888,7 @@ Sandbox::Sandbox(int& argc,char**& argv)
 
         /* SARB - start the server in the server thread. and detach it*/
 
-       if(m_serverHandler)
+       if(m_serverHandler != nullptr)
        {
            // Start the server in its own thread
            this->m_serverHandler->startServer();
@@ -877,6 +896,11 @@ Sandbox::Sandbox(int& argc,char**& argv)
            // Detach the server.
            this->m_serverHandler->detachServer();
        }
+
+       
+       
+
+
 
 
 
