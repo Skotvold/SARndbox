@@ -44,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include "WaterTable2.h"
 
+#include <fstream>
+
 namespace {
 
 /****************
@@ -767,7 +769,13 @@ void SurfaceRenderer::glRenderElevation(GLContextData& contextData) const
 			{
 			/* Upload the new depth texture: */
 			glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB,0,0,0,size[0],size[1],GL_LUMINANCE,GL_FLOAT,depthImage.getBuffer());
-			
+				std::ofstream m_outFileSARB;
+	            m_outFileSARB.open("heightmapData");
+	            printf("size 0: %i size 1: %i", size[0], size[1]);
+	            for(int i = 0; i< size[0] * size[1]; i++)
+	            {
+	               m_outFileSARB << reinterpret_cast<const float*>( depthImage.getBuffer())[i] << " "<< i  <<"\n";
+	            }
 			/* Mark the depth texture as current: */
 			dataItem->depthTextureVersion=depthImageVersion;
 			}

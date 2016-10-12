@@ -362,7 +362,7 @@ Methods of class Sandbox:
         filteredFrames.postNewValue(frameBuffer);
 		
 
-        if(this->m_printFileSARB )
+        /*if(this->m_printFileSARB )
         {
             this->m_outFileSARB.open("heightmapData");
 			this->m_outFileSARB << "frame:"  <<step <<std::endl;
@@ -372,7 +372,7 @@ Methods of class Sandbox:
             }
             
        
-        }
+        }*/
 
         /* Wake up the foreground thread: */
         Vrui::requestUpdate();
