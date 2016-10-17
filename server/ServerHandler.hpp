@@ -13,12 +13,15 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string.h>
+#include <string>
 #include <thread>
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
 
+namespace SARB{
 
+<<<<<<< HEAD
 class ServerHandler
 {
 public:
@@ -46,3 +49,34 @@ private:
     bool execPackage(tcp_stream* stream,long receivePackageSize);
 
 };
+=======
+    class ServerHandler
+    {
+    public:
+        ServerHandler(int port = 9999);
+        void startServer();
+        void stopServer();
+        void detachServer();
+        bool getThreadRunning();
+        std::string getString()
+        {
+        	return m_storeString;
+        }
+        ~ServerHandler();
+
+    private:
+
+        // Private member variables
+        bool m_threadRunning;
+        tcp_stream* stream 	;
+        TCPAcceptor* acceptor;
+        std::thread m_thread;
+        int m_port;
+        std::string m_storeString;
+
+        // Private member functions
+        void runServer();
+
+    };
+}
+>>>>>>> 9b4a65840eb23d1eab7d803b2269c9b816d4bf4f

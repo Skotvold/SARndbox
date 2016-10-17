@@ -3,11 +3,17 @@ bin/
 o/
 d/
 
-# Ignore the qt creator specific code
+# Ignore the qt creator specific code (fast fix)
 sarb-project-qt-creator.config
 sarb-project-qt-creator.creator
 sarb-project-qt-creator.files
 sarb-project-qt-creator.includes
 sarb-project-qt-creator.creator.user
+
+sarb.config
+sarb.creator
+sarb.files
+sarb.includes
+sarb.creator.user
 
 

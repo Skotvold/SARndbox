@@ -8,22 +8,23 @@
 using namespace std;
 #define SARB_PORT 9999
 
-ServerHandler::ServerHandler()
+SARB::ServerHandler::ServerHandler(int port)
     : m_threadRunning(true),
       stream(nullptr),
-      acceptor(nullptr)
+      acceptor(nullptr),
+      m_port(port)
 {
 
 }
 
 
-void ServerHandler::runServer(int port)
+void SARB::ServerHandler::runServer()
 {
     std::cout << "server thread started\n";
     // Declare stram and acceptor
 
 	
-	acceptor = new TCPAcceptor(port);
+    acceptor = new TCPAcceptor(this->m_port);
 
 	// if the server found a valid port
     if (acceptor->start() == 0)
@@ -89,33 +90,34 @@ bool ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
 
 }
 
-void ServerHandler::startServer()
+void SARB::ServerHandler::startServer()
 {
     if(!m_threadRunning)
     {
         m_threadRunning = true;
     }
 
-    this->m_thread = std::thread(&ServerHandler::runServer,this, SARB_PORT);
+    this->m_thread = std::thread(&ServerHandler::runServer,this);
 
 }
 
-void ServerHandler::stopServer()
+void SARB::ServerHandler::stopServer()
 {
     m_threadRunning = false;
 }
 
-void ServerHandler::detachServer()
+void SARB::ServerHandler::detachServer()
 {
     m_thread.detach();
 }
 
-bool ServerHandler::getThreadRunning()
+bool SARB::ServerHandler::getThreadRunning()
 {
     return m_threadRunning;
 }
 
-ServerHandler::~ServerHandler()
+
+SARB::ServerHandler::~ServerHandler()
 {
     std::cout << "\ndestructor serverHandler()\n";
 
@@ -138,7 +140,6 @@ ServerHandler::~ServerHandler()
 
     std::cout << "SERVERHANDLER Destructed\n";
 }
-
 
 // Read data of all packages
 bool ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)

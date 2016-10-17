@@ -32,7 +32,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <thread>
+#include <typeinfo>
 #include <Misc/SelfDestructPointer.h>
 #include <Misc/FunctionCalls.h>
 #include <Misc/FileNameExtensions.h>
@@ -345,7 +347,7 @@ Sandbox::DataItem::~DataItem(void)
 Methods of class Sandbox:
 ************************/
 
-void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
+    void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
 	{
 	/* Pass the received frame to the frame filter and the rain maker's frame filter: */
 	if(frameFilter!=0&&!pauseUpdates)
@@ -354,32 +356,58 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
 		rmFrameFilter->receiveRawFrame(frameBuffer);
 	}
 
-void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
+    void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
 	{
-	/* Put the new frame into the frame input buffer: */
-	filteredFrames.postNewValue(frameBuffer);
-		/*for(int i = 0; i<*frameBuffer.getSize(); i++)
-		{
-			
-			std::cout<< reinterpret_cast<const float*>( frameBuffer.getBuffer())[i] << " "<< i  <<"\n";
+        /* Put the new frame into the frame input buffer: */
+        filteredFrames.postNewValue(frameBuffer);
+		
+
+		Kinect::FrameBuffer tempFrameBuffer;
+	    tempFrameBuffer = surfaceRenderer->getHeightMap();
+	    std::vector<float> iAmAwesome;
+       for(int i = 0; i < 639; i++)
+       {
+       		for(int j = 0; j < 480; j++)
+       			{
+       				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i+1)*j]);
+       			}
+       }
+       	if (m_serverHandler->getString() == "file")
+       	{
+       		this->m_outFileSARB.open("heightmapData");
+       		this->m_outFileSARB.clear();
+            for(int i = 0; i < 639; i++)
+            {
+            	for(int j = 0; j < 480; j++)
+            	{
+               		this->m_outFileSARB << iAmAwesome[(i+1)*j] << " ";
+            	}
+            	this->m_outFileSARB << "\n";
+            }
+            this->m_outFileSARB.close();
+       	}
+        /*if(this->m_printFileSARB )
+        {
+            
+            
+       
         }*/
 
-
-	/* Wake up the foreground thread: */
-	Vrui::requestUpdate();
+        /* Wake up the foreground thread: */
+        Vrui::requestUpdate();
 	}
 
 void Sandbox::receiveRainObjects(const RainMaker::BlobList& newRainObjects)
-	{
+{
 	/* Put the new object list into the object list buffer: */
 	rainObjects.postNewValue(newRainObjects);
 	
 	/* Don't wake up the foreground thread; do it when a new filtered frame arrives: */
 	// Vrui::requestUpdate();
-	}
+}
 
 void Sandbox::addWater(GLContextData& contextData) const
-	{
+{
 	/* Check if the most recent rain object list is not empty: */
 	if(!rainObjects.getLockedValue().empty())
 		{
@@ -599,8 +627,12 @@ Sandbox::Sandbox(int& argc,char**& argv)
 	 sun(0),
 	 mainMenu(0),pauseUpdatesToggle(0),waterControlDialog(0),
 	 waterSpeedSlider(0),waterMaxStepsSlider(0),frameRateTextField(0),waterAttenuationSlider(0),
-	 controlPipeFd(-1)
-	{
+     controlPipeFd(-1),
+     m_serverHandler(nullptr), // SARB
+     m_printFileSARB(false)    // SARB
+
+
+{
 	/* Initialize the custom tool classes: */
 	WaterTool::initClass(*Vrui::getToolManager());
 	LocalWaterTool::initClass(*Vrui::getToolManager());
@@ -740,13 +772,38 @@ Sandbox::Sandbox(int& argc,char**& argv)
 				useHeightMap=true;
 			else if(strcasecmp(argv[i]+1,"rws")==0)
 				renderWaterSurface=true;
-			else if(strcasecmp(argv[i]+1,"cp")==0)
-				{
+			else if(strcasecmp(argv[i]+1,"cp")==0)	
+            {
 				++i;
 				controlPipeName=argv[i];
-				}
-			}
-		}
+
+            }
+
+
+
+            // SARB::Start Server command line argument
+            else if(strcasecmp(argv[i]+1,"server")==0)
+            {
+                // Start the server. Simple way to do it in c++11 where we do
+                // not have std::make_unique. We assigned the serverHandler to nullptr
+                // as a initializer list.
+                ++i;
+                this->m_serverHandler.reset(new SARB::ServerHandler(atoi(argv[i])));
+            }
+
+            else if(strcasecmp(argv[i]+1,"sarbfile")==0)
+
+            {
+                // Start the server. Simple way to do it in c++11 where we do
+                // not have std::make_unique. We assigned the serverHandler to nullptr
+                // as a initializer list.
+                 this->m_printFileSARB = false;
+            }
+
+
+
+        }
+    }
 	
 	if(printHelp)
 		{
@@ -820,13 +877,30 @@ Sandbox::Sandbox(int& argc,char**& argv)
 		std::cout<<"     Renders water surface as geometric surface"<<std::endl;
 		std::cout<<"  -cp <control pipe name>"<<std::endl;
 		std::cout<<"     Sets the name of a named POSIX pipe from which to read control commands"<<std::endl;
-		}
+
+        // Print the command line argument.
+        // Same format used in sandbox.cpp
+        std::cout <<"  -server <port index>"<< std::endl;
+        std::cout <<"    Start the server with port index" << std::endl;
+        std::cout <<"    Default port 9999" << std::endl;
+    }
 	
 
         /* SARB - start the server in the server thread. and detach it*/
 
-        m_serverHandler.startServer();
-        m_serverHandler.detachServer();
+       if(m_serverHandler != nullptr)
+       {
+           // Start the server in its own thread
+           this->m_serverHandler->startServer();
+
+           // Detach the server.
+           this->m_serverHandler->detachServer();
+       }
+
+       
+       
+
+
 
 
 
@@ -1020,11 +1094,14 @@ Sandbox::Sandbox(int& argc,char**& argv)
 	}
 
 Sandbox::~Sandbox(void)
-	{
+{
 
-        /* SARB - Stop the serverthread when sandbox stops */
-        this->m_serverHandler.stopServer();
+    /* SARB - Stop the serverthread when sandbox stops */
+    if(this->m_serverHandler)
+    {
+        this->m_serverHandler->stopServer();
         std::cout << "\nServer thread stopped\n";
+    }
 
 	/* Stop streaming depth frames: */
 	camera->stopStreaming();
@@ -1046,13 +1123,14 @@ Sandbox::~Sandbox(void)
 	}
 
 void Sandbox::frame(void)
-	{
+{
 	/* Check if the filtered frame has been updated: */
 	if(filteredFrames.lockNewValue())
-		{
+    {
 		/* Update the surface renderer's depth image: */
 		surfaceRenderer->setDepthImage(filteredFrames.getLockedValue());
-		}
+
+    }
 	
 	/* Lock the most recent rain object list: */
 	rainObjects.lockNewValue();
@@ -1372,7 +1450,7 @@ void Sandbox::display(GLContextData& contextData) const
 		}
 	else
 		{
-		/* Render the surface with height map: */
+		/* Render the surface with height map: this place sarb*/
 		surfaceRenderer->glRenderSinglePass(dataItem->heightColorMapObject,contextData);
 		}
 	
