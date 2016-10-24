@@ -19,11 +19,16 @@ public:
 
     int start();
     tcp_stream* accept();
+    std::vector<std::string> getIP();
+
 
 private:
     int m_listeningSocketDescriptor;
     int m_port;
     std::string m_addressInformation;
     bool m_listening;
+    // find public ip
+    std::string getPublicIp(char* cmd);
+
 
 };

@@ -98,3 +98,52 @@ tcp_stream* TCPAcceptor::accept()
 
    return new tcp_stream(socketDescription, &address);
 }
+
+std::vector<std::string> TCPAcceptor::getIP()
+{
+    struct ifaddrs * ifAddrStruct = nullptr;
+    struct ifaddrs * ifa = nullptr;
+    void * tmpAddrPtr = nullptr;
+
+    std::vector<std::string> buffer;
+    getifaddrs(&ifAddrStruct);
+
+    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr) {
+            continue;
+        }
+
+        // check it is IP4
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            // is a valid IP4 Address
+            std::stringstream ss;
+            tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            char addressBuffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+            ss << static_cast<std::string>(ifa->ifa_name) << " IP Address " << static_cast<std::string>(addressBuffer) << "\n";
+            buffer.emplace_back(ss.str());
+        }
+    }
+
+    // Store the public ip
+    std::stringstream ss;
+    ss << "Public IP Address: " << getPublicIp("dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{ print $2}'") <<"\n";
+    buffer.emplace_back(ss.str());
+
+    return buffer;
+}
+
+std::string TCPAcceptor::getPublicIp(char* cmd)
+{
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe)
+        return "ERROR";
+    char buffer[128];
+    std::string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+    }
+    pclose(pipe);
+    return result;
+}
