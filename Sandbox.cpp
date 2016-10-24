@@ -372,9 +372,8 @@ Methods of class Sandbox:
        				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i+1)*j]);
        			}
        }
-       	if (m_serverHandler->getString() == "file")
-       	{
-       		this->m_outFileSARB.open("heightmapData");
+       
+/*       		this->m_outFileSARB.open("heightmapData");
        		this->m_outFileSARB.clear();
             for(int i = 0; i < 639; i++)
             {
@@ -385,14 +384,7 @@ Methods of class Sandbox:
             	this->m_outFileSARB << "\n";
             }
             this->m_outFileSARB.close();
-       	}
-        /*if(this->m_printFileSARB )
-        {
-            
-            
-       
-        }*/
-
+       	}*/
         /* Wake up the foreground thread: */
         Vrui::requestUpdate();
 	}

@@ -8,8 +8,15 @@
 
 #pragma once
 #include <string>
+#include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <vector>
 #include "tcp_stream.hpp"
+
 
 class TCPAcceptor
 {

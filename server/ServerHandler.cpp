@@ -6,7 +6,6 @@
 #include <algorithm>
 
 using namespace std;
-#define SARB_PORT 9999
 
 SARB::ServerHandler::ServerHandler(int port)
     : m_threadRunning(true),
@@ -25,6 +24,11 @@ void SARB::ServerHandler::runServer()
 
 	
     acceptor = new TCPAcceptor(this->m_port);
+
+    // Print the public and local IP
+	std::cout << "Port: " << this->m_port << std::endl
+	<< "local IP: " << acceptor->getIP()[0] << "Public IP: " << acceptor->getIP()[1]
+	<< acceptor->getIP()[2]<< std::endl;
 
 	// if the server found a valid port
     if (acceptor->start() == 0)
@@ -58,7 +62,7 @@ void SARB::ServerHandler::runServer()
 
 }
 
-bool ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
+bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
     // Read the package. Remember some strings are too big to be
     // Stored on the stack, and need to be added to a file.
     readPackages(stream, receivePackageSize);
@@ -142,7 +146,7 @@ SARB::ServerHandler::~ServerHandler()
 }
 
 // Read data of all packages
-bool ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
+bool SARB::ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
 {
     char* pbuf = (char*) buf;
 
@@ -171,7 +175,7 @@ bool ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
 }
 
 // Read the the size of a package
-bool ServerHandler::readSize(tcp_stream* stream, long* value)
+bool SARB::ServerHandler::readSize(tcp_stream* stream, long* value)
 {
     if(!readData(stream, value,sizeof(value)))
     {
@@ -184,7 +188,7 @@ bool ServerHandler::readSize(tcp_stream* stream, long* value)
 
 
 // Read a package
-bool ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
+bool SARB::ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
 {
     std::vector<char> vec;
     auto totalSizeOfbytes = 0;
@@ -234,14 +238,14 @@ bool ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
 }
 
 // Send the size of a package
-bool ServerHandler::sendSize(tcp_stream* stream, long value)
+bool SARB::ServerHandler::sendSize(tcp_stream* stream, long value)
 {
     value = htonl(value);
     return this->sendData(stream,&value,sizeof(value));
 }
 
 // Send a package with string command
-bool ServerHandler::sendPackage(std::string command)
+bool SARB::ServerHandler::sendPackage(std::string command)
 {
     auto totalSizeOfpackage  = command.size(); // cheat for now // could be 10
     auto numberOfpackages = 0;
@@ -277,7 +281,7 @@ bool ServerHandler::sendPackage(std::string command)
 }
 
 // Send the data of a package
-bool ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
+bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 {
     char* pbuf = (char*) buf;
 
@@ -300,7 +304,7 @@ bool ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
 
 // Send a file
-bool ServerHandler::sendFile(std::string path)
+bool SARB::ServerHandler::sendFile(std::string path)
 {
 
     FILE* f = fopen(path.c_str(), "rb");

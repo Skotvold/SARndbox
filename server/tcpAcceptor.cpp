@@ -11,6 +11,8 @@
 #include <iostream>
 #include <string.h>
 #include <arpa/inet.h>
+#include <string>
+#include <sstream>
 #include "tcpAcceptor.hpp"
 
 
@@ -129,7 +131,6 @@ std::vector<std::string> TCPAcceptor::getIP()
     std::stringstream ss;
     ss << "Public IP Address: " << getPublicIp("dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{ print $2}'") <<"\n";
     buffer.emplace_back(ss.str());
-
     return buffer;
 }
 
