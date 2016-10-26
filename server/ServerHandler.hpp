@@ -18,14 +18,14 @@
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
-#include "TextureManager.hpp"
+#include "textureManager.hpp"
 
 namespace SARB{
 
     class ServerHandler
     {
     public:
-    	//ServerHandler();
+    	ServerHandler();
         ServerHandler(int port);
         void startServer();
         void stopServer();
@@ -40,7 +40,7 @@ namespace SARB{
         TCPAcceptor* acceptor;
         std::string receivedCommand;
         int m_port;
-        std::unique_ptr<TextureManager> m_textureManager;
+        std::unique_ptr<SARB::TextureManager> m_textureManager;
 
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);

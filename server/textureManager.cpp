@@ -1,6 +1,6 @@
-#include "TextureManager.hpp"
+#include "textureManager.hpp"
 
-TextureManager() : x(0), y(0)
+SARB::TextureManager::TextureManager() : x(0), y(0)
 {
 
 }
