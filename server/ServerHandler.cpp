@@ -11,7 +11,8 @@ SARB::ServerHandler::ServerHandler(int port)
     : m_threadRunning(true),
       stream(nullptr),
       acceptor(nullptr),
-      m_port(port)
+      m_port(port),
+      m_textureManager(new TextureManager)
 {
 
 }
@@ -22,7 +23,7 @@ void SARB::ServerHandler::runServer()
     std::cout << "server thread started\n";
     // Declare stram and acceptor
 
-	
+
     acceptor = new TCPAcceptor(this->m_port);
 
     // Print the public and local IP

@@ -18,6 +18,7 @@
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
+#include "TextureManager.hpp"
 
 namespace SARB{
 
@@ -34,11 +35,12 @@ namespace SARB{
 
     private:
         bool m_threadRunning;
-        std::thread m_thread;    
+        std::thread m_thread;
         tcp_stream* stream 	;
         TCPAcceptor* acceptor;
         std::string receivedCommand;
-        int m_port; 
+        int m_port;
+        std::unique_ptr<TextureManager> m_textureManager;
 
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);

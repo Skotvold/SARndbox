@@ -126,7 +126,8 @@ SARNDBOX_SOURCES = FrameFilter.cpp \
 				   server/tcpAcceptor.cpp \
 				   server/tcp_stream.cpp \
 				   server/ServerHandler.cpp \
-				   server/packet.cpp
+				   server/packet.cpp \
+				   server/TextureManager.cpp
 
 # Try to use this one in the future
 SERVER_SOURCES = server/tcpAcceptor.cpp \
