@@ -13,7 +13,9 @@ SARB::ServerHandler::ServerHandler(int port)
       acceptor(nullptr),
       receivedCommand(""),
       m_port(port),
-      sendCommand(""	)
+      sendCommand(""),
+      m_textureManager(new TextureManager)
+
 {
 
 }
@@ -24,7 +26,7 @@ void SARB::ServerHandler::runServer()
     std::cout << "server thread started\n";
     // Declare stram and acceptor
 
-	
+
     acceptor = new TCPAcceptor(this->m_port);
 
     // Print the public and local IP
