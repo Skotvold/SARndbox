@@ -11,7 +11,9 @@ SARB::ServerHandler::ServerHandler(int port)
     : m_threadRunning(true),
       stream(nullptr),
       acceptor(nullptr),
-      m_port(port)
+      receivedCommand(""),
+      m_port(port),
+      sendCommand(""	)
 {
 
 }
@@ -69,7 +71,7 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
     std::cout <<"Received Command: " << receivedCommand << std::endl;
 
     // Handle commands function for example
-    if(receivedCommand == "file")
+    if(receivedCommand == "sendFile")
     {
         // Send  a file ( sending size is built in the file function)
         std::cout << "Starting sending file\n";
@@ -77,15 +79,14 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
             std::cout << "Completed sending a file\n";
         else
             std::cout << "Failed to send file\n";
-    }
-
+ 	}
     // echo back if command not found
     else
     {
         sendSize(stream, receivedCommand.size());
         sendPackage(receivedCommand);
     }
-
+	sendCommand = receivedCommand;
     // erase the command,
     receivedCommand.erase();
 

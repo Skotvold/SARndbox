@@ -30,6 +30,8 @@ namespace SARB{
         void stopServer();
         void detachServer();
         bool getThreadRunning();
+        std::string getCommand(){ return sendCommand; }
+        void eraseCommand() { sendCommand.erase(); }
         ~ServerHandler();
 
     private:
@@ -38,7 +40,8 @@ namespace SARB{
         tcp_stream* stream 	;
         TCPAcceptor* acceptor;
         std::string receivedCommand;
-        int m_port; 
+        int m_port;
+        std::string sendCommand;
 
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);
