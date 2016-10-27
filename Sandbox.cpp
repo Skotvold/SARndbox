@@ -369,7 +369,7 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
        {
        		for(int j = 0; j < 480; j++)
        		{
-       				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i+1)*j]);
+       				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j]);
        		}
        }
        
@@ -1128,7 +1128,7 @@ void Sandbox::frame(void)
     {
 		/* Update the surface renderer's depth image: */
 		surfaceRenderer->setDepthImage(filteredFrames.getLockedValue());
-
+		
     }
 	
 	/* Lock the most recent rain object list: */
