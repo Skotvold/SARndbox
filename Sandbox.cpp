@@ -347,14 +347,14 @@ Sandbox::DataItem::~DataItem(void)
 Methods of class Sandbox:
 ************************/
 
-    void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
-	{
+void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
+{
 	/* Pass the received frame to the frame filter and the rain maker's frame filter: */
 	if(frameFilter!=0&&!pauseUpdates)
 		frameFilter->receiveRawFrame(frameBuffer);
 	if(rmFrameFilter!=0)
 		rmFrameFilter->receiveRawFrame(frameBuffer);
-	}
+}  	
 
     void Sandbox::receiveFilteredFrame(const Kinect::FrameBuffer& frameBuffer)
 	{
