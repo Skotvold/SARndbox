@@ -15,6 +15,7 @@
 #include <string.h>
 #include <string>
 #include <thread>
+#include <vector>
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
@@ -34,6 +35,7 @@ namespace SARB{
         std::string getCommand(){ return sendCommand; }
         void eraseCommand() { sendCommand.erase(); }
         ~ServerHandler();
+
 
     private:
         bool m_threadRunning;

@@ -81,7 +81,7 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
             std::cout << "Completed sending a file\n";
         else
             std::cout << "Failed to send file\n";
- 	}
+    }
     // echo back if command not found
     else
     {
