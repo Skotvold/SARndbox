@@ -65,13 +65,15 @@ void SARB::ServerHandler::runServer()
     		 
 		// echo back if command not found
    	        else
-   		{
-        	     sendHeader(stream, receivedCommand);
-                     sendPackage(receivedCommand);
-                }
+   			{
+        	   sendHeader(stream, receivedCommand.size());
+               sendPackage(receivedCommand);
+            }
+	        
 	        sendCommand = receivedCommand;
-                // erase the command,
-                receivedCommand.erase();
+            
+            // erase the command,
+            receivedCommand.erase();
 
                 // We are done with the loop or package
                 std::cout << "\n\n";
@@ -94,7 +96,7 @@ void SARB::ServerHandler::runServer()
 bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
     // Read the package. Remember some strings are too big to be
     // Stored on the stack, and need to be added to a file.
-    readPackages(stream, receivePackageSize);
+    //readPackages(stream, receivePackageSize);
     std::cout <<"Received Command: " << receivedCommand << std::endl;
 
     // Handle commands function for example
@@ -420,6 +422,7 @@ bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage)
 
     header = updateSizeString(header, buffer);
     char* arr = &header[0];
+    std::cout << header << std::endl;
     return this->sendData(stream, arr, header.size());
 }
 
