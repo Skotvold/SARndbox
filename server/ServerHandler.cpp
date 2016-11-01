@@ -65,16 +65,16 @@ void SARB::ServerHandler::runServer()
     		 
 		// echo back if command not found
    	        else
-   		 {
+   		{
         	     sendHeader(stream, receivedCommand);
-        sendPackage(receivedCommand);
-    }
-	sendCommand = receivedCommand;
-    // erase the command,
-    receivedCommand.erase();
+                     sendPackage(receivedCommand);
+                }
+	        sendCommand = receivedCommand;
+                // erase the command,
+                receivedCommand.erase();
 
-    // We are done with the loop or package
-    std::cout << "\n\n";
+                // We are done with the loop or package
+                std::cout << "\n\n";
             }
         }
     }
