@@ -16,6 +16,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <sstream>
+#include <iterator>
+#include <algorithm>
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
@@ -55,8 +58,9 @@ namespace SARB{
         bool sendSize(tcp_stream* stream, long value);
         bool sendPackage(std::string command);
         bool sendData(tcp_stream* stream, void* buf, int buflen);
-        bool sendFile(std::string path);
+        bool sendHeightMap(std::vector<std::vector<double>> heightMap);
         bool execPackage(tcp_stream* stream,long receivePackageSize);
-
+        std::string convertVectToStr(int row, std::vector<std::vector<double>> vect, int &size);
+        long unsigned int calculateHeightMapSize(std::vector<std::vector<double>> vect);
     };
 }

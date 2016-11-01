@@ -77,7 +77,15 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
     {
         // Send  a file ( sending size is built in the file function)
         std::cout << "Starting sending file\n";
-        if(sendFile("test"))
+        std::vector<std::vector<double>> vect(480, vector<double>(640));
+
+        for(int i=0;i<480;i++){
+            for(int j=0;j<640;j++){
+                vect[i][j] = i;
+            }
+        }
+
+        if(sendHeightMap(vect))
             std::cout << "Completed sending a file\n";
         else
             std::cout << "Failed to send file\n";
@@ -307,50 +315,76 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
 
 // Send a file
-bool SARB::ServerHandler::sendFile(std::string path)
+bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightMap)
 {
-
-    FILE* f = fopen(path.c_str(), "rb");
-    // Find the size of file(package)
-    fseek(f,0,SEEK_END);
-    long filesize = ftell(f);
-    rewind(f);
-
-    if(filesize == EOF)
+    int vecSize = heightMap.size();
+    long unsigned int stringSize = calculateHeightMapSize(heightMap);
+    if(!sendSize(stream, stringSize))
     {
         return false;
     }
 
-    if(!sendSize(stream, filesize))
-    {
-        return false;
-    }
-
-    std::cout << "Filesize sending: " << filesize << std::endl;
+    std::cout << "HeightMapsize sending: " << stringSize << std::endl;
     int number_of_packages = 0;
     int storageBufferSize = 2048;
-    if(filesize > 0)
+    if(vecSize > 0)
     {
-        char buffer[storageBufferSize];
+        int start = 0;
         do
         {
-            size_t num = std::min<size_t>(filesize, sizeof(buffer));
-            num = fread(buffer,1,num,f);
-
-            if(num < 1)
+            int rowSize;
+            std::string row = convertVectToStr(start,heightMap,rowSize);
+            char buffer[rowSize];
+            strcpy(buffer,row.c_str());
+            if(rowSize < 1)
                 return false;
 
-            if(!sendData(stream, buffer, num))
+            if(!sendData(stream, buffer, rowSize))
                 return false;
 
             number_of_packages++;
-            filesize -= num;
-
-        } while (filesize > 0);
+            vecSize--;
+            start++;
+            //std::cout << "HeightMap sending: " << buffer << std::endl;
+        } while (vecSize > 0);
     }
 
     std::cout << "packages: "  << number_of_packages << std::endl;
     std::cout << "Storage Buffer was: " << storageBufferSize << " bytes"<< std::endl;
-    fclose(f);
     return true;
 }
+
+std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vector<double>> vect, int &size){
+    std::string buff;
+
+    std::stringstream oss;
+
+
+  // Convert all but the last element to avoid a trailing ","
+    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<int>(oss, " "));
+
+    // Now add the last element with no delimiter
+    oss << vect[row].back();
+
+    size = oss.str().size();
+
+    return oss.str();
+}
+
+long unsigned int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>> vect){
+    int vecSize = vect.size();
+    long unsigned int size=0;
+    int start=0;
+    do{
+        int rowSize;
+        std::string row = convertVectToStr(start,vect,rowSize);
+        size += rowSize;
+        start++;
+        vecSize--;
+    }while (vecSize > 0);
+    //std::cout << "Size : " << size;
+    return size;
+}
+
+
+
