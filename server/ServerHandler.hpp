@@ -54,7 +54,7 @@ namespace SARB{
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);
         bool readSize(tcp_stream* stream, long* value);
-        bool readPackages(tcp_stream* stream, int totalSizeOfPackage);
+        bool readPackages(tcp_stream* stream);
         bool sendSize(tcp_stream* stream, long value);
         bool sendPackage(std::string command);
         bool sendData(tcp_stream* stream, void* buf, int buflen);
@@ -62,5 +62,9 @@ namespace SARB{
         bool execPackage(tcp_stream* stream,long receivePackageSize);
         std::string convertVectToStr(int row, std::vector<std::vector<double>> vect, int &size);
         long unsigned int calculateHeightMapSize(std::vector<std::vector<double>> vect);
+	    bool readHeader(int& sizeOfPackage);
+	    bool sendHeader(tcp_stream* stream, int sizeOfPackage);
+	    std::string updateSizeString(std::string baseString, std::string stringWithSize);
+
     };
 }
