@@ -47,9 +47,34 @@ void SARB::ServerHandler::runServer()
 
             // If the server get a size of package
             // Server always need size before the actual package.
-            while(readSize(stream, &receivePackageSize))
+            while((readPackages(stream)) == true)
             {
-                execPackage(stream,receivePackageSize);
+                //execPackage(stream,receivePackageSize);
+    		std::cout <<"Received Command: " << receivedCommand << std::endl;
+
+   		// Handle commands function for example
+    		if(receivedCommand == "sendFile")
+    		{
+       		    // Send  a file ( sending size is built in the file function)
+    		    std::cout << "Starting sending file\n";
+        	   if(sendFile("test"))
+            		std::cout << "Completed sending a file\n";
+       		   else
+           	    std::cout << "Failed to send file\n";
+ 		   }
+    		 
+		// echo back if command not found
+   	        else
+   		 {
+        	     sendHeader(stream, receivedCommand);
+        sendPackage(receivedCommand);
+    }
+	sendCommand = receivedCommand;
+    // erase the command,
+    receivedCommand.erase();
+
+    // We are done with the loop or package
+    std::cout << "\n\n";
             }
         }
     }
@@ -191,13 +216,21 @@ bool SARB::ServerHandler::readSize(tcp_stream* stream, long* value)
 
 
 // Read a package
-bool SARB::ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
+bool SARB::ServerHandler::readPackages(tcp_stream* stream)
 {
+    int totalSizeOfPackage = 0;
     std::vector<char> vec;
     auto totalSizeOfbytes = 0;
     auto packagesReceived = 0;
-    totalSizeOfbytes = totalSizeOfPackage;
     int storageBufferSize = 6;
+
+    if(!(readHeader(totalSizeOfPackage)))
+    {
+        return false;
+    }
+
+    totalSizeOfbytes = totalSizeOfPackage;
+
     if(totalSizeOfPackage > 0)
     {
         char buffer[storageBufferSize];
@@ -354,3 +387,54 @@ bool SARB::ServerHandler::sendFile(std::string path)
     fclose(f);
     return true;
 }
+
+
+ bool SARB::ServerHandler::readHeader(int& sizeOfPackage)
+ {
+
+     char header[8];
+
+     header[sizeof(header)-1] = '\0';
+     if(!readData(stream, header,7))
+     {
+         return false;
+     }
+
+     std::cout << header << std::endl;
+     std::istringstream iss(header);
+     iss >> sizeOfPackage;
+     std::cout << sizeOfPackage << "\n";
+     return true;
+ }
+
+
+bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage)
+{
+    // Pre format for header
+    std::string header = "0000000";
+    std::stringstream ss;
+
+    //convert the size to string
+    ss << sizeOfPackage;
+    std::string buffer = ss.str();
+
+    header = updateSizeString(header, buffer);
+    char* arr = &header[0];
+    return this->sendData(stream, arr, header.size());
+}
+
+std::string SARB::ServerHandler::updateSizeString(std::string baseString, std::string stringWithSize)
+{
+    auto start = baseString.size()-1;
+    auto end = start - stringWithSize.size();
+    int offset = stringWithSize.size()-1;
+
+    for(auto i = start; i > end; i--)
+    {
+        baseString[i] = stringWithSize[offset];
+        offset--;
+    }
+
+    return baseString;
+}
+
