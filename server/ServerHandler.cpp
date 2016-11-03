@@ -38,8 +38,6 @@ void SARB::ServerHandler::runServer()
     if (acceptor->start() == 0)
     {
         // Total size of the package serve will receive
-        long receivePackageSize;
-
         while (this->m_threadRunning)
         {
             // Server accept the client
@@ -47,26 +45,28 @@ void SARB::ServerHandler::runServer()
 
             // If the server get a size of package
             // Server always need size before the actual package.
-            while((readPackages(stream)) == true)
+            auto packageSize = 0;
+            auto packageCommand = 0;
+            while((readHeader(packageSize, packageCommand) == true)
             {
                 //execPackage(stream,receivePackageSize);
-    		std::cout <<"Received Command: " << receivedCommand << std::endl;
 
    		// Handle commands function for example
-    		if(receivedCommand == "sendFile")
+    		if(packageCommand == 1)
     		{
-       		    
+
  		    }
-    		 
+
 		// echo back if command not found
    	        else
    			{
-        	   sendHeader(stream, receivedCommand.size());
+               readPackages(stream, packageSize);
+        	   sendHeader(stream, receivedCommand.size(),0);
                sendPackage(receivedCommand);
             }
-	        
+
 	        sendCommand = receivedCommand;
-            
+
             // erase the command,
             receivedCommand.erase();
 
@@ -221,19 +221,12 @@ bool SARB::ServerHandler::readSize(tcp_stream* stream, long* value)
 
 
 // Read a package
-bool SARB::ServerHandler::readPackages(tcp_stream* stream)
+bool SARB::ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
 {
-    int totalSizeOfPackage = 0;
     std::vector<char> vec;
     auto totalSizeOfbytes = 0;
     auto packagesReceived = 0;
     int storageBufferSize = 6;
-
-    if(!(readHeader(totalSizeOfPackage)))
-    {
-        return false;
-    }
-
     totalSizeOfbytes = totalSizeOfPackage;
 
     if(totalSizeOfPackage > 0)
@@ -286,9 +279,8 @@ bool SARB::ServerHandler::sendSize(tcp_stream* stream, long value)
 }
 
 // Send a package with string command
-bool SARB::ServerHandler::sendPackage(std::string command)
+bool SARB::ServerHandler::sendPackage(std::string message, int totalSizeOfpackage)
 {
-    auto totalSizeOfpackage  = command.size(); // cheat for now // could be 10
     auto numberOfpackages = 0;
     int storageBufferSize = 2;
     if(totalSizeOfpackage > 0)
@@ -301,7 +293,7 @@ bool SARB::ServerHandler::sendPackage(std::string command)
             // pack the package
             for(int i = 0; i < bufferSize; i++)
             {
-                buffer[i] = command[offset];
+                buffer[i] = message[offset];
                 offset++;
             }
 
@@ -317,7 +309,7 @@ bool SARB::ServerHandler::sendPackage(std::string command)
     }
     std::cout << "number of package(s): " << numberOfpackages << std::endl;
     std::cout << "Storage Buffer was: " << storageBufferSize << " bytes"<< std::endl;
-    std::cout << "Total send bytes: " << command.size() << std::endl;
+    std::cout << "Total send bytes: " << message.size() << std::endl;
     return true;
 }
 
@@ -420,26 +412,27 @@ long unsigned int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::v
 
 
 
- bool SARB::ServerHandler::readHeader(int& sizeOfPackage)
+ bool SARB::ServerHandler::readHeader(int& sizeOfPackage, int& command)
  {
 
-     char header[8];
+     char header[13];
 
      header[sizeof(header)-1] = '\0';
-     if(!readData(stream, header,7))
+     if(!readData(stream, header,12))
      {
          return false;
      }
 
      std::cout << header << std::endl;
      std::istringstream iss(header);
-     iss >> sizeOfPackage;
-     std::cout << sizeOfPackage << "\n";
+     char temp;
+     iss >> sizeOfPackage >> temp >> command;
+     std::cout << sizeOfPackage << command<<" "<<"\n";
      return true;
  }
 
 
-bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage)
+bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage, int command)
 {
     // Pre format for header
     std::string header = "0000000";
@@ -449,24 +442,31 @@ bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage)
     ss << sizeOfPackage;
     std::string buffer = ss.str();
 
-    header = updateSizeString(header, buffer);
-    char* arr = &header[0];
+    header = updateHeaderString(header, buffer);
+    std::stringstream().swap(ss);
+    buffer.clear();
+
+    ss << command;
+    buffer = ss.str();
+
+    std::string commandHeader = "0000";
+    header = header +"|"+ updateHeaderString(commandHeader, buffer);
     std::cout << header << std::endl;
+    char* arr = &header[0];
     return this->sendData(stream, arr, header.size());
 }
 
-std::string SARB::ServerHandler::updateSizeString(std::string baseString, std::string stringWithSize)
+std::string SARB::ServerHandler::updateHeaderString(std::string baseString, std::string numberString)
 {
     auto start = baseString.size()-1;
-    auto end = start - stringWithSize.size();
-    int offset = stringWithSize.size()-1;
+    auto end = start - numberString.size();
+    int offset = numberString.size()-1;
 
     for(auto i = start; i > end; i--)
     {
-        baseString[i] = stringWithSize[offset];
+        baseString[i] = numberString[offset];
         offset--;
     }
 
     return baseString;
 }
-
