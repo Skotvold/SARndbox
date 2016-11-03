@@ -4,7 +4,6 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
-
 using namespace std;
 
 SARB::ServerHandler::ServerHandler(int port)
@@ -51,11 +50,10 @@ void SARB::ServerHandler::runServer()
             {
                 //execPackage(stream,receivePackageSize);
     		std::cout <<"Received Command: " << receivedCommand << std::endl;
-
-   		// Handle commands function for example
-    		if(receivedCommand == "sendFile")
-    		{
-       		    
+                //execPackage(stream,receivedCommand.size());
+                // Handle commands function for example
+                if(receivedCommand == "sendFile")
+                {
  		    }
     		 
 		// echo back if command not found
@@ -99,18 +97,19 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
     {
         // Send  a file ( sending size is built in the file function)
         std::cout << "Starting sending file\n";
-        std::vector<std::vector<double>> vect(480, vector<double>(640));
+       /* std::vector<std::vector<float>> vect(480, vector<float>(640));
 
         for(int i=0;i<480;i++){
             for(int j=0;j<640;j++){
                 vect[i][j] = i;
             }
-        }
+        }*/
 
-        if(sendHeightMap(vect))
-            std::cout << "Completed sending a file\n";
+        std::lock_guard<std::mutex> guard(heightMapMutex);
+        if(sendHeightMap(heightMap))
+            std::cout << "Completed sending heightMap\n";
         else
-            std::cout << "Failed to send file\n";
+            std::cout << "Failed to send heightMap\n";
     }
     // echo back if command not found
     else
@@ -345,7 +344,7 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
 
 // Send a file
-bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightMap)
+bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMap)
 {
     int vecSize = heightMap.size();
     long unsigned int stringSize = calculateHeightMapSize(heightMap);
@@ -386,9 +385,7 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightM
     return true;
 }
 
-std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vector<double>> vect, int &size){
-    std::string buff;
-
+std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vector<float>> vect, int &size){
     std::stringstream oss;
 
 
@@ -403,7 +400,7 @@ std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vecto
     return oss.str();
 }
 
-long unsigned int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>> vect){
+long unsigned int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<float>> vect){
     int vecSize = vect.size();
     long unsigned int size=0;
     int start=0;
@@ -470,3 +467,11 @@ std::string SARB::ServerHandler::updateSizeString(std::string baseString, std::s
     return baseString;
 }
 
+
+std::vector<std::vector<float>> SARB::ServerHandler::getHeightMap(){
+    return heightMap;
+}
+
+void SARB::ServerHandler::setHeightMap(std::vector<std::vector<float>> heightMap){
+    this->heightMap = heightMap;
+}
