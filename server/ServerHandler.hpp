@@ -25,6 +25,7 @@
 #include "textureManager.hpp"
 
 namespace SARB{
+    enum RECEIVE_COMMANDS {SARB_NOTHING = 0, SARB_ECHO = 1, SARB_HEIGHTMAP = 2};
 
     class ServerHandler
     {
@@ -61,7 +62,7 @@ namespace SARB{
         bool sendHeightMap(std::vector<std::vector<double>> heightMap);
         bool execPackage(tcp_stream* stream,long receivePackageSize);
         std::string convertVectToStr(int row, std::vector<std::vector<double>> vect, int &size);
-        long unsigned int calculateHeightMapSize(std::vector<std::vector<double>> vect);
+        int calculateHeightMapSize(std::vector<std::vector<double>> vect);
         bool readHeader(int& sizeOfPackage, int& packageCommand);
 	    bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         std::string updateHeaderString(std::string baseString, std::string numberString);

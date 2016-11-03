@@ -47,22 +47,27 @@ void SARB::ServerHandler::runServer()
             // Server always need size before the actual package.
             auto packageSize = 0;
             auto packageCommand = 0;
-            while((readHeader(packageSize, packageCommand) == true)
+            while((readHeader(packageSize, packageCommand)) == true)
             {
                 //execPackage(stream,receivePackageSize);
 
    		// Handle commands function for example
-    		if(packageCommand == 1)
+    		if(packageCommand == SARB_HEIGHTMAP)
     		{
 
  		    }
 
 		// echo back if command not found
-   	        else
+   	        else if(packageCommand == SARB_ECHO)
    			{
                readPackages(stream, packageSize);
-        	   sendHeader(stream, receivedCommand.size(),0);
-               sendPackage(receivedCommand);
+        	   sendHeader(stream, receivedCommand.size(), packageCommand);
+               sendPackage(receivedCommand,receivedCommand.size());
+            }
+
+            else
+            {
+                readPackages(stream, packageSize);
             }
 
 	        sendCommand = receivedCommand;
@@ -116,7 +121,7 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
     else
     {
         sendSize(stream, receivedCommand.size());
-        sendPackage(receivedCommand);
+        sendPackage(receivedCommand,receivedCommand.size());
     }
 	sendCommand = receivedCommand;
     // erase the command,
@@ -124,6 +129,7 @@ bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize
 
     // We are done with the loop or package
     std::cout << "\n\n";
+    return true;
 
 }
 
@@ -195,7 +201,7 @@ bool SARB::ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
 
         else if(byteReceived == 0)
         {
-            std::cout << "byte received 0" << std::endl;
+            std::cout << "[Client Disconnect] - Server lost connection to the client" << std::endl;
             return false;
         }
 
@@ -289,9 +295,9 @@ bool SARB::ServerHandler::sendPackage(std::string message, int totalSizeOfpackag
         int offset = 0;
         do
         {
-            size_t bufferSize = std::min(totalSizeOfpackage, sizeof(buffer));
+            size_t bufferSize = std::min(totalSizeOfpackage, static_cast<int>(sizeof(buffer)));
             // pack the package
-            for(int i = 0; i < bufferSize; i++)
+            for(size_t i = 0; i < bufferSize; i++)
             {
                 buffer[i] = message[offset];
                 offset++;
@@ -340,10 +346,10 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightMap)
 {
     int vecSize = heightMap.size();
-    long unsigned int stringSize = calculateHeightMapSize(heightMap);
+    int stringSize = calculateHeightMapSize(heightMap);
 
     // Use the sendHeader instead of sendSize()
-    if(!sendHeader(stream, stringSize))
+    if(!sendHeader(stream, stringSize,1))
     {
         return false;
     }
@@ -395,9 +401,9 @@ std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vecto
     return oss.str();
 }
 
-long unsigned int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>> vect){
+int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>> vect){
     int vecSize = vect.size();
-    long unsigned int size=0;
+    int size=0;
     int start=0;
     do{
         int rowSize;
