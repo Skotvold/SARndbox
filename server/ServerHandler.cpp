@@ -51,13 +51,13 @@ void SARB::ServerHandler::runServer()
             {
                 //execPackage(stream,receivePackageSize);
 
-   		// Handle commands function for example
+   		    // Handle commands function for example
     		if(packageCommand == SARB_HEIGHTMAP)
     		{
 
  		    }
 
-		// echo back if command not found
+		    // echo back if command not found
    	        else if(packageCommand == SARB_ECHO)
    			{
                readPackages(stream, packageSize);
@@ -86,7 +86,8 @@ void SARB::ServerHandler::runServer()
     // server can't listen to the port (blocked)
     else
     {
-        std::cerr << "Could not start the server. You could try another port"  << std::endl;
+        std::cerr << "[Port is blocked]\n"
+        << "Could not start the server. You could try another port"  << std::endl;
     }
 
     this->~ServerHandler();
