@@ -60,7 +60,7 @@ namespace SARB{
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);
         bool readSize(tcp_stream* stream, long* value);
-        bool readPackages(tcp_stream* stream);
+        bool readPackages(tcp_stream* stream,long val);
         bool sendSize(tcp_stream* stream, long value);
         bool sendPackage(std::string command);
         bool sendData(tcp_stream* stream, void* buf, int buflen);

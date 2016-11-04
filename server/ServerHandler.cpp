@@ -46,9 +46,9 @@ void SARB::ServerHandler::runServer()
 
             // If the server get a size of package
             // Server always need size before the actual package.
-            while((readPackages(stream)) == true)
+            while((readSize(stream,&receivePackageSize)) == true)
             {
-                //execPackage(stream,receivePackageSize);
+                execPackage(stream,receivePackageSize);
     		std::cout <<"Received Command: " << receivedCommand << std::endl;
                 //execPackage(stream,receivedCommand.size());
                 // Handle commands function for example
@@ -89,12 +89,13 @@ void SARB::ServerHandler::runServer()
 bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
     // Read the package. Remember some strings are too big to be
     // Stored on the stack, and need to be added to a file.
-    //readPackages(stream, receivePackageSize);
+    readPackages(stream, receivePackageSize);
     std::cout <<"Received Command: " << receivedCommand << std::endl;
 
     // Handle commands function for example
     if(receivedCommand == "sendFile")
     {
+        sendCommand = receivedCommand;
         // Send  a file ( sending size is built in the file function)
         std::cout << "Starting sending file\n";
        /* std::vector<std::vector<float>> vect(480, vector<float>(640));
@@ -220,18 +221,18 @@ bool SARB::ServerHandler::readSize(tcp_stream* stream, long* value)
 
 
 // Read a package
-bool SARB::ServerHandler::readPackages(tcp_stream* stream)
+bool SARB::ServerHandler::readPackages(tcp_stream* stream, long val)
 {
     int totalSizeOfPackage = 0;
     std::vector<char> vec;
     auto totalSizeOfbytes = 0;
     auto packagesReceived = 0;
     int storageBufferSize = 6;
-
-    if(!(readHeader(totalSizeOfPackage)))
-    {
-        return false;
-    }
+    totalSizeOfPackage = val;
+ //   if(!(readHeader(totalSizeOfPackage)))
+ //   {
+ //       return false;
+ //   }
 
     totalSizeOfbytes = totalSizeOfPackage;
 
@@ -350,7 +351,7 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
     long unsigned int stringSize = calculateHeightMapSize(heightMap);
 
     // Use the sendHeader instead of sendSize()
-    if(!sendHeader(stream, stringSize))
+    if(!sendSize(stream, stringSize))
     {
         return false;
     }
@@ -390,7 +391,7 @@ std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vecto
 
 
   // Convert all but the last element to avoid a trailing ","
-    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<int>(oss, " "));
+    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<float>(oss, " "));
 
     // Now add the last element with no delimiter
     oss << vect[row].back();

@@ -377,7 +377,7 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
        this->m_serverHandler->setHeightMap(heightMapServer);
        
 
-       if(this->m_serverHandler->getCommand() == "file")
+       if(this->m_serverHandler->getCommand() == "sendFile")
        {
        		this->m_serverHandler->eraseCommand();
        		this->m_outFileSARB.open("heightmapData");
