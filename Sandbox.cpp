@@ -364,35 +364,42 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
 		if(this->m_serverHandler != nullptr)
 		{
 
-			Kinect::FrameBuffer tempFrameBuffer;
-		    tempFrameBuffer = surfaceRenderer->getHeightMap();
-		    std::vector<float> iAmAwesome;
-	       for(int i = 0; i < 640; i++)
-	       {
-	       		for(int j = 0; j < 480; j++)
-	       		{
-	       				iAmAwesome.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j]);
-	       		}
-	       }
-	       
+        	Kinect::FrameBuffer tempFrameBuffer;
+        	tempFrameBuffer = surfaceRenderer->getHeightMap();
+        	std::vector<float> heightMap;
+        	std::vector<std::vector<float>> heightMapServer(480, std::vector<float>(640));
+        	for(int i = 0; i < 640; i++)
+      		{
+            	for(int j = 0; j < 480; j++)
+            	{
+                	heightMap.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j]);
+                	heightMapServer[j][i] = reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j];
+           		}
+       		}
+       
+       		this->m_serverHandler->setHeightMap(heightMapServer);
+       
 
-	       if(this->m_serverHandler->getCommand() == "file")
-	       {
-	       		this->m_serverHandler->eraseCommand();
-	       		this->m_outFileSARB.open("heightmapData");
-	       		this->m_outFileSARB.clear();
-	            for(int i = 0; i < 640; i++)
-	            {
-	            	for(int j = 0; j < 480; j++)
-	            	{
-	               		this->m_outFileSARB << iAmAwesome[(i*480)+j] << " ";
-	            	}
-	            	this->m_outFileSARB << "\n";
-	            }
-	            this->m_outFileSARB.close();
-	            std::cout << "done printing file\n";
-	            
-	       	}
+      		if(this->m_serverHandler->getCommand() == "sendFile")
+       		{
+       			this->m_serverHandler->eraseCommand();
+       			this->m_outFileSARB.open("heightmapData");
+       			this->m_outFileSARB.clear();
+            
+            	for(int i = 0; i < 640; i++)
+            	{
+            		for(int j = 0; j < 480; j++)
+            		{
+                        this->m_outFileSARB << heightMap[(i*480)+j] << " ";
+            		}
+            		
+            		this->m_outFileSARB << "\n";
+            	}
+            
+            this->m_outFileSARB.close();
+            std::cout << "done printing file\n";
+
+       		}
        	}
         /* Wake up the foreground thread: */
         Vrui::requestUpdate();

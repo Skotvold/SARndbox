@@ -23,9 +23,12 @@
 #include "packet.h"
 #include "cmd.h"
 #include "textureManager.hpp"
+#include <mutex>
+
 
 namespace SARB{
-    enum RECEIVE_COMMANDS {SARB_NOTHING = 0, SARB_ECHO = 1, SARB_HEIGHTMAP = 2};
+    enum RECEIVE_COMMANDS {SARB_READ_NOTHING = 0, SARB_READ_ECHO = 1, SARB_READ_HEIGHTMAP = 2};
+    enum SEND_COMMANDS {SARB_WRITE_NOTHING = 0, SARB_WRITE_ECHO = 1, SARB_WRITE_HEIGHTMAP = 2};
 
     class ServerHandler
     {
@@ -39,6 +42,8 @@ namespace SARB{
         std::string getCommand(){ return sendCommand; }
         void eraseCommand() { sendCommand.erase(); }
         ~ServerHandler();
+        std::vector<std::vector<float>> getHeightMap();
+        void setHeightMap(std::vector<std::vector<float>> heightMap);
 
 
     private:
@@ -49,7 +54,9 @@ namespace SARB{
         std::string receivedCommand;
         int m_port;
         std::string sendCommand;
+        std::vector<std::vector<float>> heightMap;
         std::unique_ptr<SARB::TextureManager> m_textureManager;
+        std::mutex heightMapMutex;
 
 
         void runServer();
@@ -59,12 +66,13 @@ namespace SARB{
         bool sendSize(tcp_stream* stream, long value);
         bool sendPackage(std::string command, int sizeOfPackage);
         bool sendData(tcp_stream* stream, void* buf, int buflen);
-        bool sendHeightMap(std::vector<std::vector<double>> heightMap);
-        bool execPackage(tcp_stream* stream,long receivePackageSize);
-        std::string convertVectToStr(int row, std::vector<std::vector<double>> vect, int &size);
-        int calculateHeightMapSize(std::vector<std::vector<double>> vect);
+        bool sendHeightMap(std::vector<std::vector<float>> heightMap);
+        bool execPackage(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         bool readHeader(int& sizeOfPackage, int& packageCommand);
 	    bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         std::string updateHeaderString(std::string baseString, std::string numberString);
+        std::string convertVectToStr(size_t row, std::vector<std::vector<float>> vect, size_t &size);
+        size_t calculateHeightMapSize(std::vector<std::vector<float>> vect);
+
     };
 }

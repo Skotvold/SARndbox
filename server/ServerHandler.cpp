@@ -4,7 +4,6 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
-
 using namespace std;
 
 SARB::ServerHandler::ServerHandler(int port)
@@ -45,38 +44,15 @@ void SARB::ServerHandler::runServer()
 
             // If the server get a size of package
             // Server always need size before the actual package.
+
             auto packageSize = 0;
             auto packageCommand = 0;
             while((readHeader(packageSize, packageCommand)) == true)
             {
-                //execPackage(stream,receivePackageSize);
-
-   		    // Handle commands function for example
-    		if(packageCommand == SARB_HEIGHTMAP)
-    		{
-
- 		    }
-
-		    // echo back if command not found
-   	        else if(packageCommand == SARB_ECHO)
-   			{
-               readPackages(stream, packageSize);
-        	   sendHeader(stream, receivedCommand.size(), packageCommand);
-               sendPackage(receivedCommand,receivedCommand.size());
-            }
-
-            else
-            {
-                readPackages(stream, packageSize);
-            }
-
-	        sendCommand = receivedCommand;
-
-            // erase the command,
-            receivedCommand.erase();
-
-            // We are done with the loop or package
-            std::cout << "\n\n";
+                
+                execPackage(stream, packageSize, packageCommand);
+                packageSize = 0;
+                packageCommand = 0;
             }
         }
     }
@@ -94,36 +70,42 @@ void SARB::ServerHandler::runServer()
 
 }
 
-bool SARB::ServerHandler::execPackage(tcp_stream* stream,long receivePackageSize){
-    // Read the package. Remember some strings are too big to be
-    // Stored on the stack, and need to be added to a file.
-    //readPackages(stream, receivePackageSize);
-    std::cout <<"Received Command: " << receivedCommand << std::endl;
+bool SARB::ServerHandler::execPackage(tcp_stream* stream, int packageSize, int packageCommand){
 
-    // Handle commands function for example
-    if(receivedCommand == "sendFile")
+    // MERGING
+    if(packageCommand == SARB_READ_HEIGHTMAP)
     {
-        // Send  a file ( sending size is built in the file function)
-        std::cout << "Starting sending file\n";
-        std::vector<std::vector<double>> vect(480, vector<double>(640));
-
-        for(int i=0;i<480;i++){
-            for(int j=0;j<640;j++){
-                vect[i][j] = i;
-            }
-        }
-
-        if(sendHeightMap(vect))
-            std::cout << "Completed sending a file\n";
+        std::lock_guard<std::mutex> guard(heightMapMutex);
+        sendCommand = "sendFile";
+        if(sendHeightMap(heightMap))
+            std::cout << "Completed sending heightMap\n";
         else
-            std::cout << "Failed to send file\n";
+            std::cout << "Failed to send heightMap\n";
     }
+
+    // echo back if command not found
+    else if(packageCommand == SARB_READ_ECHO)
+    {
+        readPackages(stream, packageSize);
+        sendHeader(stream, receivedCommand.size(), SARB_WRITE_ECHO);
+        sendPackage(receivedCommand,receivedCommand.size());
+    }
+
+    else if(packageCommand == SARB_READ_NOTHING)
+    {
+        // Read just for flush
+        readPackages(stream, packageSize);
+    }
+
+
+    
     // echo back if command not found
     else
     {
-        sendSize(stream, receivedCommand.size());
-        sendPackage(receivedCommand,receivedCommand.size());
+       readPackages(stream, packageSize); // read for flush
     }
+
+
 	sendCommand = receivedCommand;
     // erase the command,
     receivedCommand.erase();
@@ -344,18 +326,17 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
 
 // Send a file
-bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightMap)
+bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMap)
 {
-    int vecSize = heightMap.size();
-    int stringSize = calculateHeightMapSize(heightMap);
+    size_t vecSize = heightMap.size();
+    size_t stringSize = calculateHeightMapSize(heightMap);
 
-    // Use the sendHeader instead of sendSize()
-    if(!sendHeader(stream, stringSize,1))
+    if(!sendHeader(stream, stringSize, SARB_WRITE_HEIGHTMAP))
     {
         return false;
     }
 
-    std::cout << "HeightMapsize sending: " << stringSize << std::endl;
+
     int number_of_packages = 0;
     int storageBufferSize = 2048;
     if(vecSize > 0)
@@ -363,7 +344,7 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightM
         int start = 0;
         do
         {
-            int rowSize;
+            size_t rowSize;
             std::string row = convertVectToStr(start,heightMap,rowSize);
             char buffer[rowSize];
             strcpy(buffer,row.c_str());
@@ -376,7 +357,6 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightM
             number_of_packages++;
             vecSize--;
             start++;
-            //std::cout << "HeightMap sending: " << buffer << std::endl;
         } while (vecSize > 0);
     }
 
@@ -385,35 +365,34 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<double>> heightM
     return true;
 }
 
-std::string SARB::ServerHandler::convertVectToStr(int row,std::vector<std::vector<double>> vect, int &size){
-    std::string buff;
-
+std::string SARB::ServerHandler::convertVectToStr(size_t row,std::vector<std::vector<float>> vect, size_t &size){
     std::stringstream oss;
 
 
   // Convert all but the last element to avoid a trailing ","
-    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<int>(oss, " "));
+    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<float>(oss, " "));
 
     // Now add the last element with no delimiter
-    oss << vect[row].back();
+    oss << vect[row].back() << "\n";
 
     size = oss.str().size();
 
     return oss.str();
 }
 
-int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>> vect){
-    int vecSize = vect.size();
-    int size=0;
-    int start=0;
+
+size_t SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<float>> vect){
+    size_t vecSize = vect.size();
+    size_t size = 0;
+    size_t start = 0;
     do{
-        int rowSize;
+        size_t rowSize;
         std::string row = convertVectToStr(start,vect,rowSize);
         size += rowSize;
         start++;
         vecSize--;
     }while (vecSize > 0);
-    //std::cout << "Size : " << size;
+
     return size;
 }
 
@@ -422,10 +401,10 @@ int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>>
  bool SARB::ServerHandler::readHeader(int& sizeOfPackage, int& command)
  {
 
-     char header[13];
+     char header[15];
 
      header[sizeof(header)-1] = '\0';
-     if(!readData(stream, header,12))
+     if(!readData(stream, header,14))
      {
          return false;
      }
@@ -442,7 +421,7 @@ int SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<double>>
 bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage, int command)
 {
     // Pre format for header
-    std::string header = "0000000";
+    std::string header = "000000000";
     std::stringstream ss;
 
     //convert the size to string
@@ -458,7 +437,6 @@ bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage, int 
 
     std::string commandHeader = "0000";
     header = header +"|"+ updateHeaderString(commandHeader, buffer);
-    std::cout << header << std::endl;
     char* arr = &header[0];
     return this->sendData(stream, arr, header.size());
 }
@@ -477,3 +455,16 @@ std::string SARB::ServerHandler::updateHeaderString(std::string baseString, std:
 
     return baseString;
 }
+
+
+
+std::vector<std::vector<float>> SARB::ServerHandler::getHeightMap()
+{
+    return heightMap;
+}
+
+void SARB::ServerHandler::setHeightMap(std::vector<std::vector<float>> heightMap)
+{
+    this->heightMap = heightMap;
+}
+
