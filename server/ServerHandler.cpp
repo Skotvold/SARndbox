@@ -385,7 +385,7 @@ std::string SARB::ServerHandler::convertVectToStr(size_t row,std::vector<std::ve
     std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<float>(oss, " "));
 
     // Now add the last element with no delimiter
-    oss << vect[row].back() << "\n";
+    oss << vect[row].back() << "\n" ;
 
     size = oss.str().size();
 
