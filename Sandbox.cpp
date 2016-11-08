@@ -367,13 +367,13 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
         	Kinect::FrameBuffer tempFrameBuffer;
         	tempFrameBuffer = surfaceRenderer->getHeightMap();
         	std::vector<float> heightMap;
-        	std::vector<std::vector<float>> heightMapServer(480, std::vector<float>(640));
+                std::vector<std::vector<float>> heightMapServer(640, std::vector<float>(480));
         	for(int i = 0; i < 640; i++)
       		{
             	for(int j = 0; j < 480; j++)
             	{
                 	heightMap.emplace_back(reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j]);
-                	heightMapServer[j][i] = reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j];
+                        heightMapServer[i][j] = reinterpret_cast<float*>(tempFrameBuffer.getBuffer())[(i*480)+j];
            		}
        		}
        
@@ -397,7 +397,7 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
             	}
             
             this->m_outFileSARB.close();
-            std::cout << "done printing file\n";
+            std::cout << "done  printing file\n";
 
        		}
        	}
