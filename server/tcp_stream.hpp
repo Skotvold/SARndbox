@@ -34,4 +34,5 @@ private:
     tcp_stream(int socketDescriptor, struct sockaddr_in* address);
     tcp_stream(const tcp_stream& stream);
 
+
 };

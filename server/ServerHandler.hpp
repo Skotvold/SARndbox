@@ -66,7 +66,6 @@ namespace SARB{
         bool sendSize(tcp_stream* stream, long value);
         bool sendPackage(std::string command, int sizeOfPackage);
         bool sendData(tcp_stream* stream, void* buf, int buflen);
-        bool sendDataFloat(tcp_stream* stream, void* buf, int buflen);
         bool sendHeightMap(std::vector<std::vector<float>> heightMap);
         bool execPackage(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         bool readHeader(int& sizeOfPackage, int& packageCommand);

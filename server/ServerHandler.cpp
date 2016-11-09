@@ -20,7 +20,6 @@ SARB::ServerHandler::ServerHandler(int port)
 
 }
 
-
 void SARB::ServerHandler::runServer()
 {
     std::cout << "server thread started\n";
@@ -48,12 +47,15 @@ void SARB::ServerHandler::runServer()
 
             auto packageSize = 0;
             auto packageCommand = 0;
+           
+
             while((readHeader(packageSize, packageCommand)) == true)
             {
                 
                 execPackage(stream, packageSize, packageCommand);
                 packageSize = 0;
                 packageCommand = 0;
+
             }
         }
     }
@@ -337,6 +339,7 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 }
 
 
+
 // Send a file
 bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMap)
 {
@@ -351,7 +354,7 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
     //stop count
     t2 = clock();
     time = (float)(t2-t1)/CLOCKS_PER_SEC;
-    cout << "time = "<< time << "\n";
+    cout << "time of calculateHeightMapSize = "<< time << "\n";
     
 
     if(!sendHeader(stream, stringSize, SARB_WRITE_HEIGHTMAP))
@@ -366,14 +369,17 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
     if(vecSize > 0)
     {
          //stop count
-        t1 = clock();
+       
         int start = 0;
         do
         {
             size_t rowSize;
+            t1 = clock();
             std::string row = convertVectToStr(start,heightMap,rowSize);
             char buffer[rowSize];
             strcpy(buffer,row.c_str());
+            t2 = clock();
+            time = (float)(t2-t1)/CLOCKS_PER_SEC;
             if(rowSize < 1)
                 return false;
 
@@ -387,11 +393,10 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
             vecSize = vecSize-1;
             start = start+1;
         } while (vecSize > 0);
-        t2 = clock();
+       
         
-        time = (float)(t2-t1)/CLOCKS_PER_SEC;
-        cout << "time = "<< time << "\n";
-        cout << "timei = " << timei << "\n";
+        cout << "time of convert = "<< time << "\n";
+        cout << "time of sendData = " << timei << "\n";
     }
 
     std::cout << "packages: "  << number_of_packages << std::endl;
@@ -415,17 +420,17 @@ std::string SARB::ServerHandler::convertVectToStr(size_t row,std::vector<std::ve
 
 
 size_t SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<float>> vect){
-    size_t vecSize = vect.size();
     size_t size = 0;
     size_t start = 0;
-    do{
+
+    for(auto i : vect)
+    {
         size_t rowSize;
-        std::string row = convertVectToStr(start,vect,rowSize);
+        convertVectToStr(start,vect,rowSize);
         size += rowSize;
         start++;
-        vecSize--;
-    }while (vecSize > 0);
-
+    }
+    
     return size;
 }
 
