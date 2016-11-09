@@ -380,26 +380,26 @@ void Sandbox::rawDepthFrameDispatcher(const Kinect::FrameBuffer& frameBuffer)
        		this->m_serverHandler->setHeightMap(heightMapServer);
        
 
-      		if(this->m_serverHandler->getCommand() == "sendFile")
-       		{
-       			this->m_serverHandler->eraseCommand();
-       			this->m_outFileSARB.open("heightmapData");
-       			this->m_outFileSARB.clear();
+      		// if(this->m_serverHandler->getCommand() == "sendFile")
+       	// 	{
+       	// 		this->m_serverHandler->eraseCommand();
+       	// 		this->m_outFileSARB.open("heightmapData");
+       	// 		this->m_outFileSARB.clear();
             
-            	for(int i = 0; i < 640; i++)
-            	{
-            		for(int j = 0; j < 480; j++)
-            		{
-                        this->m_outFileSARB << heightMap[(i*480)+j] << " ";
-            		}
+        //     	for(int i = 0; i < 640; i++)
+        //     	{
+        //     		for(int j = 0; j < 480; j++)
+        //     		{
+        //                 this->m_outFileSARB << heightMap[(i*480)+j] << " ";
+        //     		}
             		
-            		this->m_outFileSARB << "\n";
-            	}
+        //     		this->m_outFileSARB << "\n";
+        //     	}
             
-            this->m_outFileSARB.close();
-            std::cout << "done  printing file\n";
+        //     this->m_outFileSARB.close();
+        //     std::cout << "done  printing file\n";
 
-       		}
+       	// 	}
        	}
         /* Wake up the foreground thread: */
         Vrui::requestUpdate();

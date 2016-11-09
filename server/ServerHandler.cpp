@@ -325,7 +325,7 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
         if(byteReceived == -1)
         {
-            std::cout << "HANDLE ERRORS" << std::endl;
+            std::cout << "[ERROR] Disconnection between Server and Client\n";
             return false;
         }
 
@@ -340,19 +340,33 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 // Send a file
 bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMap)
 {
+
     size_t vecSize = heightMap.size();
+   
+    float time;
+    clock_t t1, t2;
+    //start count
+    t1 = clock();
     size_t stringSize = calculateHeightMapSize(heightMap);
+    //stop count
+    t2 = clock();
+    time = (float)(t2-t1)/CLOCKS_PER_SEC;
+    cout << "time = "<< time << "\n";
+    
 
     if(!sendHeader(stream, stringSize, SARB_WRITE_HEIGHTMAP))
     {
         return false;
     }
 
+    float timei = 0;
+    clock_t t1i, t2i;
 
     int number_of_packages = 0;
-    int storageBufferSize = 2048;
     if(vecSize > 0)
     {
+         //stop count
+        t1 = clock();
         int start = 0;
         do
         {
@@ -363,17 +377,24 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
             if(rowSize < 1)
                 return false;
 
+            t1i = clock();
             if(!sendData(stream, buffer, rowSize))
                 return false;
-
+            t2i = clock();
+            timei += (float)(t2i-t1i)/CLOCKS_PER_SEC;
+            //std::cout << "sendata: " << timei << "\n";
             number_of_packages++;
             vecSize = vecSize-1;
             start = start+1;
         } while (vecSize > 0);
+        t2 = clock();
+        
+        time = (float)(t2-t1)/CLOCKS_PER_SEC;
+        cout << "time = "<< time << "\n";
+        cout << "timei = " << timei << "\n";
     }
 
     std::cout << "packages: "  << number_of_packages << std::endl;
-    std::cout << "Storage Buffer was: " << storageBufferSize << " bytes"<< std::endl;
     return true;
 }
 
