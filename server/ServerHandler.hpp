@@ -24,6 +24,7 @@
 #include "cmd.h"
 #include "textureManager.hpp"
 #include <mutex>
+#include <atomic>
 
 
 namespace SARB{
@@ -57,6 +58,8 @@ namespace SARB{
         std::vector<std::vector<float>> heightMap;
         std::unique_ptr<SARB::TextureManager> m_textureManager;
         std::mutex heightMapMutex;
+	std::atomic<int> mStringSizeOfHeightMap;
+
 
 
         void runServer();
@@ -69,10 +72,13 @@ namespace SARB{
         bool sendHeightMap(std::vector<std::vector<float>> heightMap);
         bool execPackage(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         bool readHeader(int& sizeOfPackage, int& packageCommand);
-	    bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
+	bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         std::string updateHeaderString(std::string baseString, std::string numberString);
-        std::string convertVectToStr(size_t row, std::vector<std::vector<float>> vect, size_t &size);
-        size_t calculateHeightMapSize(std::vector<std::vector<float>> vect);
+        std::string convertVectToStr(std::vector<float> vect, size_t &size);
+
+        //size_t calculateHeightMapSize(std::vector<std::vector<float>> vect);
+        void calculateHeightMapSizeParallell(std::vector<std::vector<float>> vect, size_t iterBegin, size_t iterEnd);
+
 
     };
 }

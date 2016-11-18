@@ -350,7 +350,25 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
     clock_t t1, t2;
     //start count
     t1 = clock();
-    size_t stringSize = calculateHeightMapSize(heightMap);
+    std::vector<std::thread> threads(std::thread::hardware_concurrency());
+    int itemsPerThread  = heightMap.size() / threads.size();
+
+    this->mStringSizeOfHeightmap = 0;
+
+    for(auto i = 0; i < threads.size(); i++)
+    {
+        auto iterBegin = i*itemsPerThread;
+        auto iterEnd = (i+1)*itemsPerThread;
+
+        threads[i] = std::thread(&ServerHandler::calculateHeightMapSizeParallell,this, heightMap, iterBegin, iterEnd);
+    }
+
+    for(auto& t : threads )
+    {
+        t.join();
+    }
+
+    size_t stringSize = this->mStringSizeOfHeightMap.load();
     //stop count
     t2 = clock();
     time = (float)(t2-t1)/CLOCKS_PER_SEC;
@@ -375,7 +393,7 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
         {
             size_t rowSize;
             t1 = clock();
-            std::string row = convertVectToStr(start,heightMap,rowSize);
+            std::string row = convertVectToStr(heightMap[start],rowSize);
             char buffer[rowSize];
             strcpy(buffer,row.c_str());
             t2 = clock();
@@ -403,15 +421,15 @@ bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMa
     return true;
 }
 
-std::string SARB::ServerHandler::convertVectToStr(size_t row,std::vector<std::vector<float>> vect, size_t &size){
+std::string SARB::ServerHandler::convertVectToStr(std::vector<float> vect, size_t &size){
     std::stringstream oss;
 
 
   // Convert all but the last element to avoid a trailing ","
-    std::copy(vect[row].begin(), vect[row].end()-1,std::ostream_iterator<float>(oss, " "));
+    std::copy(vect.begin(), vect.end()-1,std::ostream_iterator<int>(oss, " "));
 
     // Now add the last element with no delimiter
-    oss << vect[row].back() << "\n" ;
+    oss << vect.back() << "\n";
 
     size = oss.str().size();
 
@@ -419,19 +437,16 @@ std::string SARB::ServerHandler::convertVectToStr(size_t row,std::vector<std::ve
 }
 
 
-size_t SARB::ServerHandler::calculateHeightMapSize(std::vector<std::vector<float>> vect){
-    size_t size = 0;
-    size_t start = 0;
-
-    for(auto i : vect)
+void SARB::ServerHandler::calculateHeightMapSizeParallell(std::vector<std::vector<float>> vect, size_t iterBegin, size_t iterEnd)
+{
+    size_t accum = 0;
+    size_t rowSize = 0;
+    for(size_t i = iterBegin; i < iterEnd; i++)
     {
-        size_t rowSize;
-        convertVectToStr(start,vect,rowSize);
-        size += rowSize;
-        start++;
+        convertVectToStr(vect[i], rowSize);
+        accum += rowSize;
     }
-    
-    return size;
+    this->mStringSizeOfHeightmap+=accum;
 }
 
 
