@@ -13,11 +13,10 @@ SARB::ServerHandler::ServerHandler(int port)
       acceptor(nullptr),
       receivedCommand(""),
       m_port(port),
-      sendCommand(""),
-      m_textureManager(new TextureManager)
+      m_textureManager(nullptr)
 
 {
-
+    this->m_textureManager = new SARB::TextureManager();
 }
 
 void SARB::ServerHandler::runServer()
@@ -42,17 +41,18 @@ void SARB::ServerHandler::runServer()
             // Server accept the client
             stream = acceptor->accept();
 
-            // If the server get a size of package
-            // Server always need size before the actual package.
-
             auto packageSize = 0;
             auto packageCommand = 0;
            
-
+            // if server receive header.
+            // read header and execute dependent on command.
             while((readHeader(packageSize, packageCommand)) == true)
             {
                 
                 execPackage(stream, packageSize, packageCommand);
+
+                // Reset the size and command
+                // Safety measure
                 packageSize = 0;
                 packageCommand = 0;
 
@@ -60,9 +60,6 @@ void SARB::ServerHandler::runServer()
         }
     }
 
-
-    // There could be many reasons for this.
-    // server can't listen to the port (blocked)
     else
     {
         std::cerr << "[Port is blocked]\n"
@@ -73,62 +70,66 @@ void SARB::ServerHandler::runServer()
 
 }
 
+// Execute the server packages
 bool SARB::ServerHandler::execPackage(tcp_stream* stream, int packageSize, int packageCommand){
-
-    // MERGING
     if(packageCommand == SARB_READ_HEIGHTMAP)
     {
-        std::lock_guard<std::mutex> guard(heightMapMutex);
-        sendCommand = "sendFile";
-        //Calculating execution time
-        float time;
-        clock_t t1, t2;
-        //start count
-        t1 = clock();
-
-        if(sendHeightMap(heightMap))
-            std::cout << "Completed sending heightMap\n";
-        else
-            std::cout << "Failed to send heightMap\n";
-        //stop count
-        t2 = clock();
-        //convert to float
-        time = (float)(t2-t1)/CLOCKS_PER_SEC;
-        cout << "time = "<< time << "\n";
+        std::unique_lock<std::mutex> guard(heightMapMutex);
+        if(!sendHeightMap(heightMap))
+            return false;
+        guard.unlock();
+        std::cout << "heightmap sent!\n";
+        return true;
     }
 
     // echo back if command not found
     else if(packageCommand == SARB_READ_ECHO)
     {
-        readPackages(stream, packageSize);
-        sendHeader(stream, receivedCommand.size(), SARB_WRITE_ECHO);
-        sendPackage(receivedCommand,receivedCommand.size());
+        if(!readEcho(stream, packageSize))
+            return false;
+        
+        if(!sendHeader(stream, receivedCommand.size(), SARB_WRITE_ECHO))
+            return false;
+        
+        if(!sendEcho(receivedCommand,receivedCommand.size()))
+            return false;
+
+        receivedCommand.erase();
+        return true;
+    }
+
+    else if(packageCommand == SARB_READ_POSITION)
+    {
+        if(!readPosition(packageSize))
+            return false;
+
+          // erase the command,
+          std::unique_lock<std::mutex> lock(textureManagerMutex);
+          std::cout << "received position: " << this->m_textureManager->getX() 
+          << " " << this->m_textureManager->getY()<<"\n";
+          lock.unlock();
+
+        return true;
     }
 
     else if(packageCommand == SARB_READ_NOTHING)
     {
-        // Read just for flush
-        readPackages(stream, packageSize);
+        return true;
     }
-
 
     
     // echo back if command not found
     else
     {
-       readPackages(stream, packageSize); // read for flush
+       return true;
     }
 
-
-	sendCommand = receivedCommand;
-    // erase the command,
-    receivedCommand.erase();
-
-    // We are done with the loop or package
-    std::cout << "\n\n";
     return true;
-
 }
+
+// function that start the server
+// server is running it the function 
+// run server by itself
 
 void SARB::ServerHandler::startServer()
 {
@@ -141,25 +142,37 @@ void SARB::ServerHandler::startServer()
 
 }
 
+// Stop the thread server is running on
+// This will make the server call serverhandler destructior
+// Force quit of the server
 void SARB::ServerHandler::stopServer()
 {
     m_threadRunning = false;
 }
 
+// Detach the server in its own thread
 void SARB::ServerHandler::detachServer()
 {
     m_thread.detach();
 }
 
+// Get the state of the server is running
+// Or if the thread is not running
 bool SARB::ServerHandler::getThreadRunning()
 {
     return m_threadRunning;
 }
 
-
+// Destroy the ServerHandler class
 SARB::ServerHandler::~ServerHandler()
 {
     std::cout << "\ndestructor serverHandler()\n";
+
+    if(this->m_textureManager)
+    {
+        delete this->m_textureManager;
+        m_textureManager = nullptr;
+    }
 
     if(stream)
     {
@@ -178,6 +191,8 @@ SARB::ServerHandler::~ServerHandler()
         m_threadRunning = false;
     }
 
+
+
     std::cout << "SERVERHANDLER Destructed\n";
 }
 
@@ -192,7 +207,7 @@ bool SARB::ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
 
         if(byteReceived == -1)
         {
-            std::cout << "HANDLE ERRORS" << std::endl;
+            std::cout << "[Error]: please restart server" << std::endl;
             return false;
         }
 
@@ -210,89 +225,59 @@ bool SARB::ServerHandler::readData(tcp_stream* stream, void* buf, int buflen)
 
 }
 
-// Read the the size of a package
-bool SARB::ServerHandler::readSize(tcp_stream* stream, long* value)
-{
-    if(!readData(stream, value,sizeof(value)))
-    {
-        return false;
-    }
-
-    *value = ntohl(*value);
-    return true;
-}
-
 
 // Read a package
-bool SARB::ServerHandler::readPackages(tcp_stream* stream, int totalSizeOfPackage)
+bool SARB::ServerHandler::readEcho(tcp_stream* stream, int totalSizeOfPackage)
 {
     std::vector<char> vec;
-    auto totalSizeOfbytes = 0;
-    auto packagesReceived = 0;
-    int storageBufferSize = 6;
-    totalSizeOfbytes = totalSizeOfPackage;
-
-    if(totalSizeOfPackage > 0)
+    const int bufferSize = 100;
+    
+    while(totalSizeOfPackage > 0)
     {
-        char buffer[storageBufferSize];
+        char buffer[bufferSize];
+
+        int sizeToRead = std::min<int>(totalSizeOfPackage, bufferSize);
+        if(!readData(stream, buffer, sizeToRead))
+        {
+            return false;
+        }
+        
+         int offset = 0;
+
         do
         {
-            int minNumber = std::min<int>(totalSizeOfPackage, sizeof(buffer));
-            if(!readData(stream, buffer, minNumber))
-            {
-                return false;
-            }
-
-            packagesReceived++;
-            int offset = 0;
-
-            do
-            {
-                for(int i = offset; i < minNumber-offset; i++)
+            for(int i = offset; i < sizeToRead-offset; i++)
                 {
                     vec.push_back(buffer[i]);
                 }
 
                 offset+=vec.size();
 
-            } while (offset < minNumber);
+            } while (offset < sizeToRead);
 
-            totalSizeOfPackage -= minNumber;
-
-        }while(totalSizeOfPackage > 0);
+        totalSizeOfPackage -= sizeToRead;
     }
+    
 
-
-    for(auto& i : vec)
+    for(auto i : vec)
     {
-        std::cout << i;
-        receivedCommand+=i;
+        receivedCommand += i;
     }
-    std::cout << "\nreceived: " << packagesReceived <<" package(s)"<< std::endl;
-    std::cout << "Storage Buffer was: " << storageBufferSize << " bytes"<< std::endl;
-    std::cout << "total bytes received: " << totalSizeOfbytes << std::endl;
     return true;
 }
 
-// Send the size of a package
-bool SARB::ServerHandler::sendSize(tcp_stream* stream, long value)
-{
-    value = htonl(value);
-    return this->sendData(stream,&value,sizeof(value));
-}
-
 // Send a package with string command
-bool SARB::ServerHandler::sendPackage(std::string message, int totalSizeOfpackage)
+bool SARB::ServerHandler::sendEcho(std::string message, int totalSizeOfpackage)
 {
-    auto numberOfpackages = 0;
-    int storageBufferSize = 2;
+    const int storageBufferSize = 100;
     if(totalSizeOfpackage > 0)
     {
         char buffer[storageBufferSize];
         int offset = 0;
-        do
+        while(totalSizeOfpackage > 0)
         {
             size_t bufferSize = std::min(totalSizeOfpackage, static_cast<int>(sizeof(buffer)));
+            
             // pack the package
             for(size_t i = 0; i < bufferSize; i++)
             {
@@ -306,13 +291,9 @@ bool SARB::ServerHandler::sendPackage(std::string message, int totalSizeOfpackag
                 return false;
             }
 
-            numberOfpackages++;
             totalSizeOfpackage -= bufferSize;
-        } while (totalSizeOfpackage > 0);
+        }
     }
-    std::cout << "number of package(s): " << numberOfpackages << std::endl;
-    std::cout << "Storage Buffer was: " << storageBufferSize << " bytes"<< std::endl;
-    std::cout << "Total send bytes: " << message.size() << std::endl;
     return true;
 }
 
@@ -340,113 +321,80 @@ bool SARB::ServerHandler::sendData(tcp_stream* stream, void* buf, int buflen)
 
 
 
-// Send a file
-bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> heightMap)
-{
-
-    size_t vecSize = heightMap.size();
-   
-    float time;
-    clock_t t1, t2;
-    //start count
-    t1 = clock();
+// Send the heightmap to the client in strings
+bool SARB::ServerHandler::sendHeightMap(std::vector<std::vector<float>> pheightMap)
+{  
+    // Calculate the number of threads the pc can use
+    // gives better performance on wireless network connection 
     std::vector<std::thread> threads(std::thread::hardware_concurrency());
-    int itemsPerThread  = heightMap.size() / threads.size();
+    int itemsPerThread  = pheightMap.size() / threads.size();
 
-    this->mStringSizeOfHeightmap = 0;
+    // atomic total size of characters of the heightmap.
+    this->mStringSizeOfHeightMap = 0;
 
-    for(auto i = 0; i < threads.size(); i++)
+    // storageBuffer for the heightmap in strings
+    this->mHeightMapInStrings.resize(640); 
+
+    // Start the threads to iterate each area
+    // of the heightmap and convert them to strings 
+    // increment the atomic size of the heightmap also.
+    for(size_t i = 0; i < threads.size(); i++)
     {
         auto iterBegin = i*itemsPerThread;
         auto iterEnd = (i+1)*itemsPerThread;
-
-        threads[i] = std::thread(&ServerHandler::calculateHeightMapSizeParallell,this, heightMap, iterBegin, iterEnd);
+        threads[i] = std::thread(&ServerHandler::calculateHeightMapSizeParallell,this, pheightMap, iterBegin, iterEnd);
     }
 
+    // Join the threads
     for(auto& t : threads )
     {
         t.join();
     }
-
-    size_t stringSize = this->mStringSizeOfHeightMap.load();
-    //stop count
-    t2 = clock();
-    time = (float)(t2-t1)/CLOCKS_PER_SEC;
-    cout << "time of calculateHeightMapSize = "<< time << "\n";
     
-
-    if(!sendHeader(stream, stringSize, SARB_WRITE_HEIGHTMAP))
+    // send the header with the size
+    auto packageSize = this->mStringSizeOfHeightMap.load();
+    if(!sendHeader(stream, packageSize, SARB_WRITE_HEIGHTMAP))
     {
         return false;
     }
-
-    float timei = 0;
-    clock_t t1i, t2i;
-
-    int number_of_packages = 0;
-    if(vecSize > 0)
+    
+    // Send the heightmap
+    if(packageSize > 0)
     {
-         //stop count
-       
-        int start = 0;
-        do
+        for(size_t i  = 0; i < mHeightMapInStrings.size(); i++)
         {
-            size_t rowSize;
-            t1 = clock();
-            std::string row = convertVectToStr(heightMap[start],rowSize);
-            char buffer[rowSize];
-            strcpy(buffer,row.c_str());
-            t2 = clock();
-            time = (float)(t2-t1)/CLOCKS_PER_SEC;
-            if(rowSize < 1)
+            char buffer[mHeightMapInStrings[i].size()];
+            strcpy(buffer,mHeightMapInStrings[i].c_str());
+            if(!sendData(stream, buffer, mHeightMapInStrings[i].size()))
                 return false;
-
-            t1i = clock();
-            if(!sendData(stream, buffer, rowSize))
-                return false;
-            t2i = clock();
-            timei += (float)(t2i-t1i)/CLOCKS_PER_SEC;
-            //std::cout << "sendata: " << timei << "\n";
-            number_of_packages++;
-            vecSize = vecSize-1;
-            start = start+1;
-        } while (vecSize > 0);
-       
-        
-        cout << "time of convert = "<< time << "\n";
-        cout << "time of sendData = " << timei << "\n";
+        }
     }
 
-    std::cout << "packages: "  << number_of_packages << std::endl;
+    this->mHeightMapInStrings.clear();
     return true;
 }
 
+// Convert the serverhandler to string
 std::string SARB::ServerHandler::convertVectToStr(std::vector<float> vect, size_t &size){
     std::stringstream oss;
-
-
-  // Convert all but the last element to avoid a trailing ","
-    std::copy(vect.begin(), vect.end()-1,std::ostream_iterator<int>(oss, " "));
-
-    // Now add the last element with no delimiter
-    oss << vect.back() << "\n";
-
+    std::copy(vect.begin(), vect.end(),std::ostream_iterator<int>(oss, " "));
     size = oss.str().size();
-
     return oss.str();
 }
 
-
+// calculates the heightmap size in strings and also convert from float array to strings
+// strings representing the integers
 void SARB::ServerHandler::calculateHeightMapSizeParallell(std::vector<std::vector<float>> vect, size_t iterBegin, size_t iterEnd)
 {
     size_t accum = 0;
     size_t rowSize = 0;
     for(size_t i = iterBegin; i < iterEnd; i++)
     {
-        convertVectToStr(vect[i], rowSize);
+        this->mHeightMapInStrings[i] = convertVectToStr(vect[i], rowSize);
         accum += rowSize;
     }
-    this->mStringSizeOfHeightmap+=accum;
+
+    this->mStringSizeOfHeightMap+=accum;
 }
 
 
@@ -466,7 +414,6 @@ void SARB::ServerHandler::calculateHeightMapSizeParallell(std::vector<std::vecto
      std::istringstream iss(header);
      char temp;
      iss >> sizeOfPackage >> temp >> command;
-     std::cout << sizeOfPackage << command<<" "<<"\n";
      return true;
  }
 
@@ -480,7 +427,6 @@ bool SARB::ServerHandler::sendHeader(tcp_stream *stream, int sizeOfPackage, int 
     //convert the size to string
     ss << sizeOfPackage;
     std::string buffer = ss.str();
-
     header = updateHeaderString(header, buffer);
     std::stringstream().swap(ss);
     buffer.clear();
@@ -521,3 +467,55 @@ void SARB::ServerHandler::setHeightMap(std::vector<std::vector<float>> heightMap
     this->heightMap = heightMap;
 }
 
+
+bool SARB::ServerHandler::readPosition(int sizeOfPackage)
+{
+    std::vector<char> vec;
+    if(sizeOfPackage > 0)
+    {
+        char buffer[10];
+     
+        while(sizeOfPackage > 0)
+        {
+            size_t sizeToRead = std::min<int>(sizeOfPackage, sizeof(buffer));
+            if(!readData(stream, buffer, sizeToRead))
+            {
+                return false;
+            }
+
+             size_t offset = 0;
+
+            do
+            {
+                for(size_t i = offset; i < (sizeToRead-offset); i++)
+                {
+                    vec.emplace_back(buffer[i]);
+                }
+
+                offset+=vec.size();
+
+            } while (offset < sizeToRead);
+
+            sizeOfPackage -= sizeToRead;
+        }
+    }
+    
+    string temp = "";
+    for(auto i : vec)
+    {
+        temp += i;
+    }
+        
+
+    std::istringstream ss(temp);
+    int x,y;  
+    ss >> x >> y;
+    if(this->m_textureManager != nullptr)
+    {
+       std::unique_lock<std::mutex> lock(textureManagerMutex);
+       m_textureManager->setXY(x,y);
+       lock.unlock();
+    }
+        
+    return true;
+}

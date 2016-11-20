@@ -8,7 +8,6 @@
 //
 
 #pragma once
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -19,20 +18,37 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
+#include <mutex>
+#include <atomic>
+
 #include "tcpAcceptor.hpp"
 #include "packet.h"
 #include "cmd.h"
 #include "textureManager.hpp"
-#include <mutex>
-#include <atomic>
 
 
-namespace SARB{
-    enum RECEIVE_COMMANDS {SARB_READ_NOTHING = 0, SARB_READ_ECHO = 1, SARB_READ_HEIGHTMAP = 2};
-    enum SEND_COMMANDS {SARB_WRITE_NOTHING = 0, SARB_WRITE_ECHO = 1, SARB_WRITE_HEIGHTMAP = 2};
+namespace SARB
+{
+    enum READ_COMMANDS 
+    {
+        SARB_READ_NOTHING = 0, 
+        SARB_READ_ECHO = 1, 
+        SARB_READ_HEIGHTMAP = 2,
+        SARB_READ_POSITION = 3,
+        SARB_READ_IMAGE_PNG = 4 
+    };
 
+    enum SEND_COMMANDS 
+    {
+        SARB_WRITE_NOTHING = 0, 
+        SARB_WRITE_ECHO = 1, 
+        SARB_WRITE_HEIGHTMAP = 2
+    };
+
+    
     class ServerHandler
     {
+    
     public:
     	ServerHandler();
         ServerHandler(int port);
@@ -40,43 +56,46 @@ namespace SARB{
         void stopServer();
         void detachServer();
         bool getThreadRunning();
-        std::string getCommand(){ return sendCommand; }
-        void eraseCommand() { sendCommand.erase(); }
-        ~ServerHandler();
         std::vector<std::vector<float>> getHeightMap();
         void setHeightMap(std::vector<std::vector<float>> heightMap);
+        ~ServerHandler();
+
 
 
     private:
+        // Server specific members
         bool m_threadRunning;
         std::thread m_thread;
         tcp_stream* stream 	;
         TCPAcceptor* acceptor;
         std::string receivedCommand;
         int m_port;
-        std::string sendCommand;
+
+        // Heightmap and the texture manager
         std::vector<std::vector<float>> heightMap;
-        std::unique_ptr<SARB::TextureManager> m_textureManager;
+        SARB::TextureManager* m_textureManager;
+        std::mutex textureManagerMutex;
+
+
+        // Threading of the sending of heightmap
         std::mutex heightMapMutex;
-	std::atomic<int> mStringSizeOfHeightMap;
+	    std::atomic<int> mStringSizeOfHeightMap;
+        std::vector<std::string> mHeightMapInStrings;
 
 
 
         void runServer();
         bool readData(tcp_stream* stream, void* buf, int buflen);
-        bool readSize(tcp_stream* stream, long* value);
-        bool readPackages(tcp_stream* stream, int sizeOfPackage);
-        bool sendSize(tcp_stream* stream, long value);
-        bool sendPackage(std::string command, int sizeOfPackage);
+        bool readEcho(tcp_stream* stream, int sizeOfPackage);
+        bool sendEcho(std::string command, int sizeOfPackage);
         bool sendData(tcp_stream* stream, void* buf, int buflen);
         bool sendHeightMap(std::vector<std::vector<float>> heightMap);
         bool execPackage(tcp_stream* stream, int sizeOfPackage, int packageCommand);
         bool readHeader(int& sizeOfPackage, int& packageCommand);
-	bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
+	    bool sendHeader(tcp_stream* stream, int sizeOfPackage, int packageCommand);
+        bool readPosition(int sizeOfPackage);
         std::string updateHeaderString(std::string baseString, std::string numberString);
         std::string convertVectToStr(std::vector<float> vect, size_t &size);
-
-        //size_t calculateHeightMapSize(std::vector<std::vector<float>> vect);
         void calculateHeightMapSizeParallell(std::vector<std::vector<float>> vect, size_t iterBegin, size_t iterEnd);
 
 

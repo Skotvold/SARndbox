@@ -15,10 +15,10 @@ void SARB::TextureManager::setY(int& y)
     this->y = y;
 }
 
-void SARB::TextureManager::setXY(int& x, int& y)
+void SARB::TextureManager::setXY(int x, int y)
 {
-    setX(x);
-    setY(y);
+    this->x = x;
+    this->y = y;
 }
 
 int SARB::TextureManager::getX()
